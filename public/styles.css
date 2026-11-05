@@ -1,0 +1,4726 @@
+
+:root {
+  --bg: #080b11;
+  --card: #0d1220;
+  --text: #e8f0ff;
+  --muted: #9bb1d1;
+  --acc: #00ff88;
+  --acc2: #2a7cff;
+  --grid: linear-gradient(#ffffff14 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff14 1px, transparent 1px);
+  --border: #1c2a44;
+  --neon: 0 0 12px #00ff88, 0 0 28px #00ff8855, 0 0 48px #00ff8833;
+
+  /* Cyberpunk colors */
+  --colors-bg--300: #1e181e;
+  --colors-bg--500: #191a1e;
+  --colors-primary--200: #8bf4c3;
+  --colors-primary--300: #69eaae;
+  --colors-primary--500: #5ae8a6;
+  --colors-primary--600: #309c6a;
+  --colors-primary--700: #215e42;
+  --colors-primary--800: #174530;
+  --colors-primary--900: #183c2b;
+  --colors-secondary--500: #2bea91;
+  --colors-secondary--900: #295943;
+  --colors-tertiary--500: #3ffea5;
+  --colors-on_bg--500: var(--colors-primary--500);
+  --colors-on_tertiary--500: var(--colors-bg--300);
+  --colors-on_primary--500: var(--colors-primary--200);
+  --colors-active--500: #2bfea0;
+  --font-ui: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --fonts-primary: var(--font-ui);
+  --fonts-secondary: "VT323", monospace;
+  --ui-glow: 0 0 5px var(--colors-primary--500);
+  --ui-glow-borders--500: 0 0 3px var(--colors-primary--500);
+  --ui-glow-color: currentcolor;
+  --ui-glow-text: -3px -2px 12px var(--ui-glow-color);
+  --ui-glow-text--dimmed: -2px -1px 8px var(--ui-glow-color);
+  --ui-elevation--1: 2px 2px 0 rgba(0, 0, 0, 0.8);
+  --ui-notch-amount: 1rem;
+  --ui-notch-hypotenuse: 22.627416px;
+  --ui-notch-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - var(--ui-notch-amount) + 2px),
+    calc(100% - var(--ui-notch-amount) + 2px) 100%,
+    0 100%
+  );
+
+  /* Cyberpunk titles variables */
+  --glitched-duration: 0.9s;
+  --glitched-long-duration: 3s;
+  --yellow-color: #02f986;
+  --yellow-color-opacity: #02f98642;
+  --orange-color: #0062ff;
+  --border-color: #8ae66e;
+  --red-color: #0062ff;
+  --blue-color: #137748;
+  --green-color: #446d44;
+  --purple-color: purple;
+}
+* {
+  box-sizing: border-box;
+  position: relative;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  background-color: var(--colors-bg--500);
+  background-image: radial-gradient(
+    ellipse at 33% 10%,
+    #164630 0%,
+    transparent 75%
+  );
+  background-repeat: no-repeat;
+  color: var(--colors-on_bg--500);
+  font-family: var(--font-ui);
+  font-size: 100%;
+  line-height: 1.4;
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+a {
+  color: var(--acc);
+}
+.container {
+  width: min(1200px, 92vw);
+  margin: 0 auto;
+}
+
+/* layers */
+#hero-canvas,
+#fx-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+}
+#hero-canvas {
+  pointer-events: none;
+}
+#fx-canvas {
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: 0.85;
+}
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: var(--grid);
+  background-size: 48px 48px, 48px 48px;
+  opacity: 0.15;
+  mask-image: radial-gradient(70% 60% at 50% 30%, #000 65%, transparent 100%);
+}
+
+/* 3D Model Container */
+.model-container {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.model-wrapper {
+  width: 100vw;
+  height: 100vh;
+  transform-style: preserve-3d;
+}
+
+.model-wrapper canvas {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.model-controls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--colors-bg--300);
+  border: 2px solid var(--colors-primary--500);
+  border-radius: 8px;
+  padding: 20px;
+  width: 300px;
+  pointer-events: auto;
+  z-index: 9999;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+  cursor: move;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  .model-controls {
+    width: calc(100vw - 32px);
+    max-width: 280px;
+    padding: 12px;
+    top: 10px;
+    right: 10px;
+    font-size: 12px;
+  }
+  
+  .model-controls h3 {
+    font-size: 14px;
+    margin: 0 0 10px 0;
+  }
+}
+
+.model-controls.dragging {
+  cursor: grabbing;
+}
+
+.model-controls h3 {
+  color: var(--colors-secondary--500);
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  text-align: center;
+  cursor: move;
+  padding: 5px;
+  border-bottom: 1px solid var(--colors-primary--500);
+}
+
+/* Control Toggle Button */
+.control-toggle {
+  background: var(--colors-primary--500);
+  color: var(--colors-bg--300);
+  border: 2px solid var(--colors-primary--500);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-family: var(--fonts-secondary);
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+}
+
+.control-toggle:hover {
+  background: var(--colors-secondary--500);
+  border-color: var(--colors-secondary--500);
+  color: var(--colors-bg--300);
+  box-shadow: 0 0 10px rgba(43,234,145,0.5);
+}
+
+.control-toggle.active {
+  background: var(--colors-secondary--500);
+  border-color: var(--colors-secondary--500);
+  color: var(--colors-bg--300);
+}
+
+/* Reset Button */
+.reset-btn {
+  background: var(--colors-primary--600);
+  color: var(--colors-primary--200);
+  border: 1px solid var(--colors-primary--500);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-family: var(--fonts-secondary);
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.reset-btn:hover {
+  background: var(--colors-primary--500);
+  border-color: var(--colors-primary--300);
+  color: var(--colors-bg--300);
+  box-shadow: 0 0 10px rgba(90,232,166,0.5);
+}
+
+/* Cyberpunk Skill Tree - Proporção baseada na imagem de fundo */
+.cyberpunk-skill-tree {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 60%; /* Proporção 5:3 baseada na imagem original */
+  min-height: 500px;
+  margin: 40px 0;
+  overflow: hidden;
+  font-family: "BlenderPro", "VT323", monospace;
+  border-radius: 20px;
+}
+
+/* Background Images - Mantendo proporção original */
+.skill-tree-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+}
+
+.tree-decoration {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  opacity: 0.6;
+  z-index: 2;
+  /* Manter proporção original da imagem */
+  aspect-ratio: 1;
+}
+
+/* Central Level Diamond - Proporcional ao container */
+.central-level {
+  position: absolute;
+  top: calc(45% + 6vh);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+.level-diamond {
+  width: 12%;
+  height: 12%;
+  min-width: 100px;
+  min-height: 100px;
+  max-width: 140px;
+  max-height: 140px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.diamond-tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(0,255,136,0.5));
+  animation: diamondGlow 2s ease-in-out infinite alternate;
+}
+
+.level-number {
+  color: #00ff88;
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 700;
+  text-shadow: 0 0 10px #00ff88;
+  z-index: 3;
+  margin-bottom: 1px;
+  position: relative;
+  text-align: center;
+  line-height: 1;
+}
+
+.level-label {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  z-index: 3;
+  position: relative;
+  margin-top: 2px;
+  text-align: center;
+  line-height: 1;
+}
+
+/* Skill Attributes - Posicionamento baseado na imagem de referência */
+.skill-attribute {
+  position: absolute;
+  width: 22%;
+  height: 17%;
+  min-width: 160px;
+  min-height: 130px;
+  max-width: 220px;
+  max-height: 180px;
+  z-index: 3;
+  transition: all 0.3s ease;
+  cursor: move;
+}
+
+.skill-attribute[data-attribute="frontend"],
+.skill-attribute[data-attribute="body"] {
+  top: 45%;
+  left: 8%;
+  transform: translateY(-50%);
+}
+
+.skill-attribute[data-attribute="backend"],
+.skill-attribute[data-attribute="reflexes"] {
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.skill-attribute[data-attribute="database"],
+.skill-attribute[data-attribute="technical"] {
+  top: 20%;
+  right: 8%;
+  transform: translateY(-50%);
+}
+
+.skill-attribute[data-attribute="devops"],
+.skill-attribute[data-attribute="cool"] {
+  bottom: 20%;
+  right: 8%;
+  transform: translateY(50%);
+}
+
+.skill-attribute[data-attribute="ia"],
+.skill-attribute[data-attribute="intelligence"] {
+  bottom: 20%;
+  left: 8%;
+  transform: translateY(50%);
+}
+
+/* Attribute external tags - Proporcional */
+.attribute-tag {
+  position: absolute;
+  color: #4aa77c;
+  font-family: "VT323", monospace;
+  font-size: clamp(8px, 0.8vw, 12px);
+  letter-spacing: 2px;
+  opacity: 0.75;
+  z-index: 3;
+}
+.attribute-tag--top {
+  top: -3vh;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.attribute-tag--bottom {
+  bottom: -3vh;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Central decorative diamond grid - Proporcional ao container */
+.central-diamond-grid {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20%;
+  height: 20%;
+  min-width: 160px;
+  min-height: 160px;
+  max-width: 240px;
+  max-height: 240px;
+  z-index: 2;
+}
+.mini-diamond {
+  position: absolute;
+  width: 5%;
+  height: 5%;
+  min-width: 32px;
+  min-height: 32px;
+  max-width: 48px;
+  max-height: 48px;
+  background: #121424;
+  border: 2px solid #1f2940;
+  transform: rotate(45deg);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6);
+}
+.mini-diamond.pos-1 {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+}
+.mini-diamond.pos-2 {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+}
+.mini-diamond.pos-3 {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+}
+.mini-diamond.pos-4 {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.attribute-panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: url("/build/images/tile-1-7ced94d8.svg") center/contain
+    no-repeat;
+  filter: drop-shadow(0 0 15px rgba(0,255,136,0.5));
+}
+
+.attribute-panel:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 25px rgba(0,255,136,0.8));
+}
+
+/* SKILL TREE CONTROLS */
+.cyberpunk-skill-tree {
+  transform: scale(1) translate(0px, 0px);
+}
+
+/* Escala dos painéis individuais */
+.skill-attribute .attribute-panel {
+  transform: scale(1);
+}
+
+/* Posição customizada do FRONTEND/BODY */
+.skill-attribute[data-attribute="frontend"],
+.skill-attribute[data-attribute="body"] {
+  left: 21.5%;
+  top: calc(26% + 6vh);
+  transform: translateY(-50%);
+}
+
+/* Posição customizada do BACKEND/REFLEXES */
+.skill-attribute[data-attribute="backend"],
+.skill-attribute[data-attribute="reflexes"] {
+  left: 41.5%;
+  top: calc(9% + 6vh);
+  transform: translateY(-50%);
+}
+
+/* Posição customizada do DATABASE/TECHNICAL */
+.skill-attribute[data-attribute="database"],
+.skill-attribute[data-attribute="technical"] {
+  left: 62.2%;
+  top: calc(26% + 6vh);
+  transform: translateY(-50%);
+}
+
+/* Posição customizada do DEVOPS/COOL */
+.skill-attribute[data-attribute="devops"],
+.skill-attribute[data-attribute="cool"] {
+  left: 63%;
+  top: calc(71% + 6vh);
+  transform: translateY(-50%);
+}
+
+/* Posição customizada do IA/INTELLIGENCE */
+.skill-attribute[data-attribute="ia"],
+.skill-attribute[data-attribute="intelligence"] {
+  left: 20.3%;
+  top: calc(71% + 6vh);
+  transform: translateY(-50%);
+}
+
+/* Tiles específicos para cada atributo baseado na sequência correta */
+.skill-attribute[data-attribute="backend"] .attribute-panel,
+.skill-attribute[data-attribute="reflexes"] .attribute-panel {
+  background: url("/build/images/tile-3-6c9d2cd8.svg") center/contain
+    no-repeat;
+}
+
+.skill-attribute[data-attribute="frontend"] .attribute-panel,
+.skill-attribute[data-attribute="body"] .attribute-panel {
+  background: url("/build/images/tile-2-0ea2f3c7.svg") center/contain
+    no-repeat;
+}
+
+.skill-attribute[data-attribute="database"] .attribute-panel,
+.skill-attribute[data-attribute="technical"] .attribute-panel {
+  background: url("/build/images/tile-2-0ea2f3c7.svg") center/contain
+    no-repeat;
+}
+
+.skill-attribute[data-attribute="ia"] .attribute-panel,
+.skill-attribute[data-attribute="intelligence"] .attribute-panel {
+  background: url("/build/images/tile-3-6c9d2cd8.svg") center/contain
+    no-repeat;
+}
+
+.skill-attribute[data-attribute="devops"] .attribute-panel,
+.skill-attribute[data-attribute="cool"] .attribute-panel {
+  background: url("/build/images/tile-3-6c9d2cd8.svg") center/contain
+    no-repeat;
+}
+
+/* Estados baseados no nível - apenas opacidade e brilho */
+.attribute-panel[data-level="0"] {
+  opacity: 0.4;
+  filter: drop-shadow(0 0 5px rgba(0,255,136,0.2));
+}
+
+.attribute-panel[data-level="1"] {
+  opacity: 0.6;
+  filter: drop-shadow(0 0 8px rgba(0,255,136,0.3));
+}
+
+.attribute-panel[data-level="2"] {
+  opacity: 0.8;
+  filter: drop-shadow(0 0 12px rgba(0,255,136,0.4));
+}
+
+.attribute-panel[data-level="3"] {
+  opacity: 1;
+  filter: drop-shadow(0 0 15px rgba(0,255,136,0.5));
+}
+
+.attribute-panel[data-level="4"] {
+  opacity: 1;
+  filter: drop-shadow(0 0 20px rgba(0,255,136,0.7));
+}
+
+.attribute-panel[data-level="5"] {
+  opacity: 1;
+  filter: drop-shadow(0 0 25px rgba(0,255,136,0.9));
+}
+
+.attribute-icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 5px #00ff88);
+  z-index: 2;
+  position: relative;
+}
+
+.attribute-name {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 3px;
+  text-shadow: 0 0 5px #ffffff;
+  z-index: 3;
+  position: relative;
+}
+
+.attribute-level {
+  color: #00ff88;
+  font-size: 16px;
+  font-weight: 700;
+  text-shadow: 0 0 10px #00ff88;
+  margin-bottom: 4px;
+  z-index: 3;
+  position: relative;
+}
+
+.attribute-controls {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.attr-btn {
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 3;
+  position: relative;
+}
+
+.attr-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(0,255,136,0.5));
+  transition: all 0.2s ease;
+}
+
+/* Painel de controles da skill tree */
+.skill-tree-controls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #00ff88;
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 100;
+  color: #ffffff;
+  font-family: "VT323", monospace;
+  min-width: 200px;
+  max-width: 300px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .skill-tree-controls {
+    width: calc(100vw - 32px);
+    max-width: 280px;
+    padding: 8px;
+    top: 10px;
+    right: 10px;
+    max-height: 60vh;
+    font-size: 12px;
+  }
+  
+  .skill-tree-controls h3 {
+    font-size: 14px;
+  }
+}
+
+/* Painel de controles do modelo 3D - Mesmo estilo da skill tree */
+.model-controls-panel {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #00ff88;
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 100;
+  color: #ffffff;
+  font-family: "VT323", monospace;
+  min-width: 200px;
+  max-width: 300px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .model-controls-panel {
+    width: calc(100vw - 32px);
+    max-width: 280px;
+    padding: 8px;
+    top: 10px;
+    left: 10px;
+    max-height: 60vh;
+    font-size: 12px;
+  }
+  
+  .model-controls-panel h3 {
+    font-size: 14px;
+  }
+}
+
+.skill-tree-controls h3,
+.model-controls-panel h3 {
+  margin: 0 0 10px 0;
+  color: #00ff88;
+  text-shadow: 0 0 5px #00ff88;
+}
+
+.control-group {
+  margin-bottom: 10px;
+}
+
+.control-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: #ffffff;
+}
+
+.control-group input {
+  width: 100%;
+  padding: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #00ff88;
+  border-radius: 4px;
+  color: #ffffff;
+  font-family: "VT323", monospace;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.control-btn {
+  background-color: transparent;
+  border: 1px solid var(--colors-secondary--500);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--colors-secondary--500);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-ui);
+  letter-spacing: 0.045em;
+  padding: 0.45rem;
+  text-align: left;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  flex: 1;
+  font-size: 12px;
+  justify-content: center;
+}
+
+.control-btn:hover {
+  background-color: var(--colors-secondary--900);
+  color: var(--colors-secondary--500);
+}
+
+.copy-btn {
+  background-color: transparent;
+  border: 1px solid var(--colors-primary--500);
+  color: var(--colors-primary--500);
+}
+
+.copy-btn:hover {
+  background-color: var(--colors-primary--900);
+  color: var(--colors-primary--500);
+}
+
+/* Estados de arrastar */
+.skill-attribute.dragging {
+  z-index: 1000;
+  transform: scale(1.05) !important;
+  filter: drop-shadow(0 0 20px rgba(0,255,136,0.8));
+  transition: none;
+  cursor: grabbing;
+}
+
+.skill-attribute.dragging .attribute-panel {
+  filter: drop-shadow(0 0 25px rgba(0,255,136,1));
+}
+
+/* Cursor para indicar que é arrastável */
+.skill-attribute {
+  cursor: grab;
+}
+
+.skill-attribute:active {
+  cursor: grabbing;
+}
+
+.skill-attribute.resizing {
+  z-index: 1000;
+  filter: drop-shadow(0 0 15px rgba(83,255,175,0.8));
+}
+
+/* Feedback visual para indicar que é arrastável */
+.skill-attribute:hover .attribute-panel {
+  filter: drop-shadow(0 0 15px rgba(0,255,136,0.6));
+}
+
+.attr-btn:hover img {
+  filter: drop-shadow(0 0 10px rgba(0,255,136,0.8));
+  transform: scale(1.1);
+}
+
+.attr-btn:active {
+  transform: scale(0.9);
+}
+
+/* Connection Lines */
+.cyberpunk-skill-tree::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+      45deg,
+      transparent 40%,
+      #00ff88 50%,
+      transparent 60%
+    ),
+    linear-gradient(-45deg, transparent 40%, #00ff88 50%, transparent 60%),
+    linear-gradient(90deg, transparent 40%, #00ff88 50%, transparent 60%),
+    linear-gradient(0deg, transparent 40%, #00ff88 50%, transparent 60%);
+  background-size: 100% 2px, 100% 2px, 2px 100%, 2px 100%;
+  background-position: center, center, center, center;
+  background-repeat: no-repeat;
+  opacity: 0.3;
+  z-index: 1;
+  animation: circuitPulse 3s ease-in-out infinite;
+}
+
+/* Relic Panel - Posicionamento centralizado */
+.relic-panel {
+  position: absolute;
+  bottom: calc(15% - 1vh);
+  left: 50%;
+  transform: translateX(-50%);
+  background: url("/build/images/tile-relic-1f2824f5.svg")
+    center/contain no-repeat;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 5;
+  filter: drop-shadow(0 0 15px rgba(0,255,136,0.5));
+  width: 180px;
+  height: 50px;
+}
+
+.relic-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(0,255,136,0.8));
+}
+
+.relic-text {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px #ffffff;
+}
+
+/* Circuit Elements */
+.circuit-elements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.circuit-text {
+  position: absolute;
+  color: rgba(0,255,136,0.3);
+  font-size: 8px;
+  font-family: "VT323", monospace;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  animation: circuitFloat 4s ease-in-out infinite;
+}
+
+.circuit-text:nth-child(1) {
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.circuit-text:nth-child(2) {
+  top: 60%;
+  right: 15%;
+  animation-delay: 1s;
+}
+
+.circuit-text:nth-child(3) {
+  bottom: 15%;
+  left: 20%;
+  animation-delay: 2s;
+}
+
+/* Animations */
+@keyframes diamondGlow {
+  0% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes circuitPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes circuitFloat {
+  0%,
+  100% {
+    transform: translateY(0px);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 0.6;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .cyberpunk-skill-tree {
+    height: auto;
+    min-height: 400px;
+    padding-bottom: 70%;
+    margin: 20px 0;
+  }
+
+  .level-diamond {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    min-height: 60px;
+    max-width: 80px;
+    max-height: 80px;
+  }
+
+  .level-number {
+    font-size: clamp(20px, 4vw, 28px);
+  }
+
+  .level-label {
+    font-size: 8px;
+  }
+
+  .skill-attribute {
+    width: 18%;
+    height: 14%;
+    min-width: 80px;
+    min-height: 80px;
+    max-width: 120px;
+    max-height: 120px;
+  }
+
+  .attribute-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .attribute-name {
+    font-size: 8px;
+  }
+
+  .attribute-level {
+    font-size: 14px;
+  }
+
+  .attr-btn {
+    width: 14px;
+    height: 14px;
+  }
+
+  .central-diamond-grid {
+    min-width: 120px;
+    min-height: 120px;
+    max-width: 160px;
+    max-height: 160px;
+  }
+
+  .mini-diamond {
+    min-width: 24px;
+    min-height: 24px;
+    max-width: 32px;
+    max-height: 32px;
+  }
+
+  .relic-panel {
+    width: 140px;
+    height: 40px;
+    padding: 8px 12px;
+  }
+
+  .relic-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .relic-text {
+    font-size: 8px;
+  }
+}
+
+.control-group {
+  margin-bottom: 15px;
+}
+
+.control-group label {
+  display: block;
+  color: var(--colors-primary--500);
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.control-group input[type="range"] {
+  width: 100%;
+  height: 6px;
+  background: var(--colors-bg--500);
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.control-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--colors-secondary--500);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.control-group input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--colors-secondary--500);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+#reset-model {
+  width: 100%;
+  padding: 10px;
+  background: var(--colors-primary--500);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#reset-model:hover {
+  background: var(--colors-primary--300);
+}
+
+/* header */
+header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 20;
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 1rem 0 0.5rem 0;
+  background-color: var(--colors-bg--500);
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease;
+}
+
+header::after {
+  background-color: var(--colors-primary--500);
+  box-shadow: var(--ui-glow);
+  bottom: 0;
+  content: "";
+  height: 2px;
+  position: absolute;
+  left: 0;
+  width: 100%;
+}
+
+header {
+  transition: transform 0.3s ease-in-out;
+}
+
+header.hidden {
+  transform: translateY(-100%);
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--fonts-secondary);
+  font-size: 1.25rem;
+  letter-spacing: 0.035rem;
+  text-transform: uppercase;
+  padding: 0.5rem;
+  flex-shrink: 0;
+}
+.dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--acc);
+  box-shadow: var(--neon);
+  flex-shrink: 0;
+}
+.nav-links {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  justify-content: flex-end;
+}
+.nav-links a {
+  align-items: baseline;
+  display: flex;
+  text-transform: uppercase;
+  transition: transform 0.25s;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.nav-links a:hover {
+  color: var(--colors-primary--200);
+}
+.nav-links a.active {
+  color: var(--colors-secondary--500);
+  font-size: 1.25rem;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  header {
+    padding: 0.5rem 0 0.25rem 0;
+  }
+  
+  header .container {
+    width: 100%;
+    padding: 0 12px;
+  }
+  
+  nav {
+    padding: 8px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .brand {
+    font-size: 1rem;
+    padding: 0.25rem 0;
+    width: 100%;
+  }
+  
+  .dot {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .nav-links {
+    width: 100%;
+    gap: 8px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  
+  .nav-links a {
+    padding: 6px 8px;
+    font-size: 0.85rem;
+  }
+  
+  .nav-links a.active {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  nav {
+    padding: 6px 10px;
+  }
+  
+  .brand {
+    font-size: 0.9rem;
+  }
+  
+  .nav-links {
+    gap: 6px;
+  }
+  
+  .nav-links a {
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+  
+  .nav-links a.active {
+    font-size: 0.9rem;
+  }
+}
+
+/* sections */
+section {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.hero {
+  padding-top: 72px;
+  align-items: flex-end;
+}
+.hero .inner {
+  padding: 12svh 0 10svh;
+}
+.kicker {
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+h1 {
+  font-size: clamp(40px, 8vw, 104px);
+  line-height: 0.9;
+  margin: 0.1em 0 0.2em;
+  font-family: var(--font-ui);
+}
+.anaglyph {
+  text-shadow: 0 0 0 var(--text), 1px 0 0 var(--acc), -1px 0 0 var(--acc2);
+  filter: drop-shadow(0 1px 6px #00ff8822);
+}
+
+/* Glitch Effect */
+.glitch {
+  position: relative;
+  color: var(--colors-secondary--500);
+  font-family: var(--fonts-secondary);
+  text-shadow: var(--ui-glow-text);
+  animation: glitch 2s infinite;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.glitch::before {
+  animation: glitch-1 0.5s infinite;
+  color: var(--colors-primary--500);
+  z-index: -1;
+}
+
+.glitch::after {
+  animation: glitch-2 0.5s infinite;
+  color: var(--colors-tertiary--500);
+  z-index: -2;
+}
+
+@keyframes glitch {
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+}
+
+@keyframes glitch-1 {
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(2px, -2px);
+  }
+  40% {
+    transform: translate(-2px, 2px);
+  }
+  60% {
+    transform: translate(-2px, -2px);
+  }
+  80% {
+    transform: translate(2px, 2px);
+  }
+}
+
+@keyframes glitch-2 {
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, -2px);
+  }
+  40% {
+    transform: translate(2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(-2px, 2px);
+  }
+}
+.subtitle {
+  color: var(--muted);
+  font-size: clamp(16px, 2vw, 22px);
+  max-width: 68ch;
+}
+.chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.chip {
+  border: 1px solid var(--border);
+  background: #0b1424;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.panel {
+  padding: 8svh 0;
+  border-top: 1px solid #ffffff14;
+}
+.panel h2 {
+  font-size: clamp(28px, 4.5vw, 54px);
+  margin: 0 0 16px;
+  font-family: var(--font-ui);
+  color: #fff;
+}
+.muted {
+  color: var(--muted);
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 18px;
+  justify-items: center;
+  position: relative;
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 0 16px;
+  }
+}
+.card {
+  background: var(--card);
+  border: 1px solid #ffffff1a;
+  border-radius: 14px;
+  padding: 18px;
+  transform: translateY(0);
+  opacity: 1;
+  will-change: transform, opacity;
+  transition: transform 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.card:hover {
+  transform: translateY(-4px) scale(1.015);
+}
+
+/* Cyberpunk Card Style */
+.card-cyberpunk {
+  --primary: hsl(var(--primary-hue), 85%, calc(var(--primary-lightness, 50) * 1%));
+  --shadow-primary: hsl(var(--shadow-primary-hue), 90%, 50%);
+  --primary-hue: 0;
+  --primary-lightness: 50;
+  --color: hsl(0, 0%, 100%);
+  --font-size: 18px;
+  --shadow-primary-hue: 180;
+  --label-size: 9px;
+  --shadow-secondary-hue: 60;
+  --shadow-secondary: hsl(var(--shadow-secondary-hue), 90%, 60%);
+  /* O card é arredondado (herda de .card); as fatias do glitch são faixas
+     horizontais (inset) para nunca trocar os cantos redondos por quinas. */
+  --radius: 14px;
+  --border: 4px;
+  --shimmy-distance: 5;
+  --clip-one: inset(2% 0 5% 0);
+  --clip-two: inset(78% 0 0 0);
+  --clip-three: inset(44% 0 46% 0);
+  --clip-four: inset(0 0 100% 0);
+  --clip-five: inset(0 0 100% 0);
+  --clip-six: inset(40% 0 15% 0);
+  --clip-seven: inset(63% 0 20% 0);
+  
+  width: 380px;
+  max-width: 100%;
+  height: auto;
+  min-height: 86px;
+  font-size: var(--font-size);
+  font-family: var(--font-ui);
+  color: var(--color);
+  background: linear-gradient(45deg, transparent 5%, #0162ff 5%);
+  text-transform: uppercase;
+  outline: transparent;
+  letter-spacing: 2px;
+  position: relative;
+  font-weight: 700;
+  border: 0;
+  box-shadow: 6px 0px 0px #00f683;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin: 0 auto;
+  padding: 20px;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transform: translateY(0);
+  opacity: 1;
+  will-change: transform, opacity;
+  transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+  z-index: 0;
+  overflow: visible;
+}
+
+@media (max-width: 768px) {
+  .card-cyberpunk {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    min-height: 70px;
+  }
+  
+  .card-period {
+    font-size: 0.8rem;
+    margin: 6px 0 10px 0;
+  }
+}
+
+.card-cyberpunk > * {
+  position: relative;
+  z-index: 2;
+}
+
+.card-period {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 8px 0 12px 0;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.card-cyberpunk:after,
+.card-cyberpunk:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  display: none;
+}
+
+.card-cyberpunk:hover:before {
+  display: block;
+  background: var(--shadow-primary);
+  transform: translate(var(--border), 0);
+  border-radius: inherit;
+}
+
+.card-cyberpunk:hover:after {
+  display: block;
+  background: linear-gradient(45deg, transparent 5%, #0162ff 5%);
+  border-radius: inherit;
+}
+
+.card-cyberpunk__glitch {
+  position: absolute;
+  top: calc(var(--border) * -1);
+  left: calc(var(--border) * -1);
+  right: calc(var(--border) * -1);
+  bottom: calc(var(--border) * -1);
+  background: var(--shadow-primary);
+  text-shadow: 2px 2px var(--shadow-primary), -2px -2px var(--shadow-secondary);
+  border-radius: calc(var(--radius) + var(--border));
+  clip-path: var(--clip-four);
+  animation: cyber-glitch 2s infinite;
+  display: none;
+  z-index: 1;
+  pointer-events: none;
+  color: var(--color);
+  font-size: var(--font-size);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 20px;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.card-cyberpunk:hover .card-cyberpunk__glitch {
+  display: flex;
+}
+
+.card-cyberpunk__glitch:before {
+  content: '';
+  position: absolute;
+  top: calc(var(--border) * 1);
+  right: calc(var(--border) * 1);
+  bottom: calc(var(--border) * 1);
+  left: calc(var(--border) * 1);
+  border-radius: var(--radius);
+  background: linear-gradient(45deg, transparent 5%, #0162ff 5%);
+  z-index: -1;
+}
+
+.card-cyberpunk:hover {
+  transform: translateY(-4px) scale(1.015);
+}
+
+@keyframes cyber-glitch {
+  0% {
+    clip-path: var(--clip-one);
+  }
+  2%, 8% {
+    clip-path: var(--clip-two);
+    transform: translate(calc(var(--shimmy-distance) * -1%), 0);
+  }
+  6% {
+    clip-path: var(--clip-two);
+    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
+  }
+  9% {
+    clip-path: var(--clip-two);
+    transform: translate(0, 0);
+  }
+  10% {
+    clip-path: var(--clip-three);
+    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
+  }
+  13% {
+    clip-path: var(--clip-three);
+    transform: translate(0, 0);
+  }
+  14%, 21% {
+    clip-path: var(--clip-four);
+    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
+  }
+  25% {
+    clip-path: var(--clip-five);
+    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
+  }
+  30% {
+    clip-path: var(--clip-five);
+    transform: translate(calc(var(--shimmy-distance) * -1%), 0);
+  }
+  35%, 45% {
+    clip-path: var(--clip-six);
+    transform: translate(calc(var(--shimmy-distance) * -1%));
+  }
+  40% {
+    clip-path: var(--clip-six);
+    transform: translate(calc(var(--shimmy-distance) * 1%));
+  }
+  50% {
+    clip-path: var(--clip-six);
+    transform: translate(0, 0);
+  }
+  55% {
+    clip-path: var(--clip-seven);
+    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
+  }
+  60% {
+    clip-path: var(--clip-seven);
+    transform: translate(0, 0);
+  }
+  31%, 61%, 100% {
+    clip-path: var(--clip-four);
+  }
+}
+
+.skills {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 24px;
+}
+@media (max-width: 900px) {
+  .skills {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* pinned sketchfab */
+.skfb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: 1px solid #2a3e66;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--neon);
+}
+.skfb-wrap::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  border-radius: 18px;
+  background: radial-gradient(60% 60% at 50% 50%, #00ff8818, transparent 70%),
+    linear-gradient(45deg, #00ff8833, #2a7cff33);
+  mix-blend-mode: screen;
+}
+.skfb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: contrast(1.06) saturate(1.08);
+}
+.pin-note {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 6px 10px;
+  border: 1px solid #2b3a60;
+  border-radius: 999px;
+  background: #0a1324cc;
+  font-size: 0.8rem;
+}
+
+/* microinterações */
+.magnet {
+  background-color: transparent;
+  border: 1px solid var(--colors-secondary--500);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--colors-secondary--500);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-ui);
+  letter-spacing: 0.045em;
+  padding: 0.45rem;
+  text-align: left;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+.magnet:hover {
+  background-color: var(--colors-secondary--900);
+  color: var(--colors-secondary--500);
+}
+.magnet svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* progress rail */
+.progress {
+  position: fixed;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 48vh;
+  width: 3px;
+  background: #1b2744;
+  border-radius: 2px;
+  z-index: 15;
+  overflow: hidden;
+}
+.progress .bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 0;
+  background: linear-gradient(#00ff88, #2a7cff);
+}
+
+/* loader */
+#initial-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 1.2rem;
+  color: var(--acc);
+  text-shadow: var(--neon);
+}
+#loader-text {
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  animation: glitch 2s infinite;
+}
+@keyframes glitch {
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+}
+
+/* Botão CONTROLS na seção Tweaks */
+.controls-btn {
+  background-color: transparent;
+  border: 1px solid var(--colors-secondary--500);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--colors-secondary--500);
+  display: inline-block;
+  font-family: var(--font-ui);
+  letter-spacing: 0.045em;
+  padding: 0.45rem;
+  text-align: left;
+  text-transform: uppercase;
+  margin-bottom: 0;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.controls-btn:hover {
+  background-color: var(--colors-secondary--900);
+  color: var(--colors-secondary--500);
+}
+
+/* Botão de controles do modelo 3D - Mesmo padrão do CONTROLS */
+.model-controls-btn {
+  background-color: transparent;
+  border: 1px solid var(--colors-secondary--500);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--colors-secondary--500);
+  display: inline-block;
+  font-family: var(--font-ui);
+  letter-spacing: 0.045em;
+  padding: 0.45rem;
+  text-align: left;
+  text-transform: uppercase;
+  margin-bottom: 0;
+  transition: all 0.3s ease;
+}
+
+.model-controls-btn:hover {
+  background-color: var(--colors-secondary--900);
+  color: var(--colors-secondary--500);
+}
+
+/* Botões com notch (corte) para botões importantes */
+.controls-btn--notch,
+.model-controls-btn--notch {
+  border-width: 2px;
+  clip-path: var(--ui-notch-path);
+  padding: 0.55rem 0.7rem 0.7rem 0.55rem;
+  position: relative;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.controls-btn--notch::before,
+.model-controls-btn--notch::before {
+  background-color: currentcolor;
+  bottom: 5px;
+  content: "";
+  display: block;
+  height: 3px;
+  position: absolute;
+  right: -6px;
+  top: auto;
+  transform: rotate(-45deg);
+  width: var(--ui-notch-hypotenuse);
+  z-index: 100;
+}
+
+/* Estilos para formulários com notch */
+.form-control {
+  background-color: var(--colors-bg--300);
+  border: 1px solid var(--colors-primary--600);
+  clip-path: var(--ui-notch-path);
+  padding-right: 0.5rem;
+  position: relative;
+  text-align: right;
+}
+
+.form-control::before {
+  background-color: var(--colors-primary--600);
+  bottom: 5px;
+  content: "";
+  display: block;
+  height: 3px; /* bigger to compensate transform */
+  position: absolute;
+  right: -6px;
+  top: auto;
+  transform: rotate(-45deg);
+  width: var(--ui-notch-hypotenuse);
+  z-index: 100;
+}
+
+.form-control input,
+.form-control textarea {
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--colors-primary--500);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  letter-spacing: 0.045em;
+  outline: none;
+  padding: 0.5rem;
+  resize: none;
+  width: 100%;
+  text-align: right;
+}
+
+.form-control--with-addon {
+  align-items: center;
+  display: flex;
+}
+
+.form-control--with-addon .button,
+.form-control--with-addon .button:hover {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.form-control__addon {
+  display: inline-block;
+  padding: 0.45rem;
+}
+
+.form-control__addon svg {
+  display: block;
+  fill: currentcolor;
+  height: 1.125rem;
+  opacity: 0.66;
+  width: 1.125rem;
+}
+
+.form-control__addon--prefix {
+  order: -1;
+}
+
+.form-control__addon--suffix {
+  order: 1;
+}
+
+/* Alinhamento do formulário à direita */
+.card[data-text="SEND"] {
+  text-align: right;
+}
+
+.card[data-text="SEND"] h3 {
+  text-align: right;
+  margin-bottom: 20px;
+}
+
+.card[data-text="SEND"] label {
+  text-align: right;
+  display: block;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.card[data-text="SEND"] .magnet {
+  margin-left: auto;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+/* Estilos para seção de contato */
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(0,255,136,0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(0,255,136,0.2);
+}
+
+.contact-icon {
+  font-size: 18px;
+}
+
+/* Cyberpunk Titles Styles */
+/* Titles */
+h1.cyberpunk {
+  font-size: clamp(40px, 8vw, 104px);
+  line-height: 0.9;
+  font-weight: 200;
+  position: relative;
+  padding-bottom: 15px;
+  margin: 0.1em 0 0.2em;
+}
+
+h2.cyberpunk {
+  font-size: clamp(28px, 4.5vw, 54px);
+  line-height: 1.2;
+  font-weight: 300;
+  position: relative;
+  padding-bottom: 15px;
+  margin: 0 0 16px;
+}
+
+h3.cyberpunk {
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  line-height: 1.4;
+  font-weight: 500;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+h4.cyberpunk {
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  line-height: 1.3;
+  font-weight: 700;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+h1.cyberpunk:before,
+h2.cyberpunk:before,
+h3.cyberpunk:before,
+h4.cyberpunk:before {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: 0px;
+    left: 2px;
+    width: 100%;
+    height: 10px;
+    background-color: #000;
+    clip-path: polygon(0px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px, 85px 6px, 80px 10px, 0px 10px);
+}
+
+h1.cyberpunk.glitched {
+  animation-name: h1glitched;
+  animation-duration: calc(var(--glitched-duration) * 1.4);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+h2.cyberpunk.glitched {
+  animation-name: h1glitched;
+  animation-duration: calc(var(--glitched-duration) * 1.7);
+  animation-iteration-count: infinite;
+  animation-direction: reverse;
+  animation-timing-function: linear;
+}
+
+h3.cyberpunk.glitched {
+  animation-name: h1glitched;
+  animation-duration: calc(var(--glitched-duration) * 1.1);
+  animation-iteration-count: infinite;
+  animation-direction: reverse;
+  animation-timing-function: ease-out;
+}
+
+h4.cyberpunk.glitched {
+  animation-name: h1glitched;
+  animation-duration: calc(var(--glitched-duration) * 2.1);
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes h1glitched {
+  0% {
+    transform: skew(-20deg);
+    left: -4px;
+  }
+  10% {
+    transform: skew(-20deg);
+    left: -4px;
+  }
+  11% {
+    transform: skew(0deg);
+    left: 2px;
+  }
+  50% {
+    transform: skew(0deg);
+  }
+  51% {
+    transform: skew(10deg);
+  }
+  59% {
+    transform: skew(10deg);
+  }
+  60% {
+    transform: skew(0deg);
+  }
+  100% {
+    transform: skew(0deg);
+  }
+}
+
+h1.cyberpunk.glitched:before {
+  animation-name: h1beforeglitched;
+  animation-duration: calc(var(--glitched-duration) * 2);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes h1beforeglitched {
+  0% {
+    transform: skew(-20deg);
+    left: -4px;
+    clip-path: polygon(0px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px, 85px 6px, 80px 10px, 0px 10px);
+  }
+  10% {
+    transform: skew(-20deg);
+    left: -4px;
+    clip-path: polygon(0px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px, 85px 6px, 80px 10px, 0px 10px);
+  }
+  11% {
+    transform: skew(0deg);
+    left: 2px;
+    clip-path: polygon(0px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px, 85px 6px, 80px 10px, 0px 10px);
+  }
+  50% {
+    transform: skew(0deg);
+    clip-path: polygon(0px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px, 85px 6px, 80px 10px, 0px 10px);
+  }
+  51% {
+    transform: skew(0deg);
+    clip-path: polygon(0px 0px, 85px 0px, 90px 5px, 100% 5px, 40% 5px, calc(40% - 30px) 0px, calc(40% + 30px) 0px, calc(45% - 15px) 5px, 100% 5px, 100% 6px, calc(45% - 14px) 6px, calc(40% + 29px) 1px, calc(40% - 29px) 1px, calc(40% + 1px) 6px, 85px 6px, 80px 10px, 0px 10px);
+  }
+  59% {
+    transform: skew(0deg);
+    clip-path: polygon(0px 0px, 85px 0px, 90px 5px, 100% 5px, 40% 5px, calc(40% - 30px) 0px, calc(40% + 30px) 0px, calc(45% - 15px) 5px, 100% 5px, 100% 6px, calc(45% - 14px) 6px, calc(40% + 29px) 1px, calc(40% - 29px) 1px, calc(40% + 1px) 6px, 85px 6px, 80px 10px, 0px 10px);
+  }
+  60% {
+    transform: skew(0deg);
+    clip-path: polygon(0px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px, 85px 6px, 80px 10px, 0px 10px);
+  }
+  100% {
+    transform: skew(0deg);
+    clip-path: polygon(0px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px, 85px 6px, 80px 10px, 0px 10px);
+  }
+}
+
+h2.cyberpunk:before {
+  clip-path: polygon(0px 5px, 35px 5px, 40px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px, 85px 6px, 80px 10px, 20px 10px, 15px 6px, 0px 6px);
+}
+
+h2.cyberpunk.glitched:before {
+  animation-name: h2beforeglitched;
+  animation-duration: calc(var(--glitched-duration) * 2);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes h2beforeglitched {
+  0% {
+    transform: scaleY(1);
+  }
+  10% {
+    transform: scaleY(1);
+  }
+  11% {
+    transform: scaleY(-1);
+  }
+  50% {
+    transform: scaleY(-1);
+  }
+  51% {
+    transform: scaleY(1);
+  }
+  59% {
+    transform: scaleY(1);
+  }
+  60% {
+    transform: scaleY(1);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+h3.cyberpunk:before {
+        clip-path: polygon(0px 5px, 10px 5px, 15px 0px, 40px 0px, 45px 5px, 100% 5px, 100% 6px, 31px 6px, 27px 2px, 15px 2px, 8px 10px, 0px 10px);
+}
+
+h4.cyberpunk:before {
+        clip-path: polygon(0px 3px, 15px 3px, 20px 0px, 80px 0px, 85px 3px, 100% 3px, 100% 4px, 85px 4px, 80px 7px, 20px 7px, 15px 4px, 0px 4px);
+}
+
+h1.cyberpunk:after,
+h2.cyberpunk:after,
+h3.cyberpunk:after,
+h4.cyberpunk:after,
+p.cyberpunk:after {
+  content: "_";
+  animation-name: hxafter;
+  animation-duration: var(--glitched-duration);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+h3.cyberpunk:after,
+h4.cyberpunk:after {
+  animation-direction: reverse;
+  animation-duration: calc(var(--glitched-duration) / 2);
+}
+
+@keyframes hxafter {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0;
+  }
+  51% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================
+   SKILL TREE NA TELA DO MONITOR
+   O script posiciona .monitor-screen com matrix3d sobre a tela do CRT.
+   ============================================ */
+.monitor-screen {
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  z-index: 1;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.monitor-screen.is-on {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.monitor-screen__inner {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* sem fundo próprio: o fundo, a barra de título e o rodapé vêm da tela 3D */
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: 50% 50%;
+}
+
+/* Linhas de varredura e vinheta do CRT */
+.monitor-screen__inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  /* mesmas linhas de varredura do canvas da tela 3D */
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.2) 0,
+    rgba(0, 0, 0, 0.2) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+}
+
+.monitor-screen .cyberpunk-skill-tree {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  padding-bottom: 0;
+  min-height: 0;
+  margin: 0;
+  border-radius: 0;
+}
+
+/* Animações da skill tree ficam paradas enquanto o monitor está desligado */
+.monitor-screen:not(.is-on) * {
+  animation-play-state: paused !important;
+}
+
+.monitor-screen__spacer {
+  width: 100%;
+}
+
+.monitor-screen .skill-tree-bg .bg-image {
+  opacity: 0;
+}
+
+/* ==========================================================
+   SKILL TREE — layout do build planner do Cyberpunk 2077
+   Prancha de 762x820 com os nós em posições simétricas:
+   topo (backend), laterais de cima (frontend/database),
+   laterais de baixo (ia/devops) e relic na base. Tudo em %
+   e em cqw, então escala igual no monitor e no celular.
+   ========================================================== */
+.skill-tree-board {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: 94%;
+  aspect-ratio: 762 / 820;
+  transform: translate(-50%, -50%);
+  container-type: inline-size;
+  z-index: 3;
+  background: url("/build/images/tree-decoration-6ce8e6ed.png") center / 76.38% 59.76%
+    no-repeat;
+}
+
+/* A decoração passa a ser o fundo da prancha (como na referência) */
+.cyberpunk-skill-tree .tree-decoration,
+.cyberpunk-skill-tree .central-diamond-grid,
+.cyberpunk-skill-tree .attribute-tag,
+.cyberpunk-skill-tree .diamond-tile {
+  display: none;
+}
+.cyberpunk-skill-tree::before {
+  display: none;
+}
+
+/* Nível: número no encaixe de cima do losango, rótulo no de baixo */
+.skill-tree-board .central-level {
+  position: absolute;
+  inset: 0;
+  transform: none;
+  pointer-events: none;
+}
+.skill-tree-board .level-diamond {
+  position: static;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+}
+.skill-tree-board .level-number,
+.skill-tree-board .level-label {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+.skill-tree-board .level-number {
+  top: 41.2%;
+  font-size: 5.4cqw;
+}
+.skill-tree-board .level-label {
+  top: 58.8%;
+  font-size: 1.9cqw;
+  letter-spacing: 0.3cqw;
+}
+
+/* Nós */
+.skill-tree-board .skill-attribute {
+  width: 37.27%;
+  height: 23.2%;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  right: auto;
+  bottom: auto;
+  transform: none;
+  transition: filter 0.2s ease-out;
+}
+.skill-tree-board .skill-attribute[data-attribute="backend"] {
+  left: 31.36%;
+  top: 0;
+}
+.skill-tree-board .skill-attribute[data-attribute="frontend"] {
+  left: 0;
+  top: 14.39%;
+}
+.skill-tree-board .skill-attribute[data-attribute="database"] {
+  left: 62.73%;
+  top: 14.39%;
+}
+.skill-tree-board .skill-attribute[data-attribute="ia"] {
+  left: 0;
+  top: 62.8%;
+}
+.skill-tree-board .skill-attribute[data-attribute="devops"] {
+  left: 62.73%;
+  top: 62.8%;
+}
+
+/* Formato do tile depende da posição, como na referência */
+.skill-tree-board .skill-attribute[data-attribute="backend"] .attribute-panel {
+  background-image: url("/build/images/tile-3-6c9d2cd8.svg");
+}
+.skill-tree-board .skill-attribute[data-attribute="frontend"] .attribute-panel,
+.skill-tree-board .skill-attribute[data-attribute="database"] .attribute-panel {
+  background-image: url("/build/images/tile-2-0ea2f3c7.svg");
+}
+.skill-tree-board .skill-attribute[data-attribute="ia"] .attribute-panel,
+.skill-tree-board .skill-attribute[data-attribute="devops"] .attribute-panel {
+  background-image: url("/build/images/tile-1-7ced94d8.svg");
+}
+.skill-tree-board .attribute-panel {
+  background-size: 100% 100%;
+  justify-content: flex-start;
+  padding-top: 26%;
+  gap: 1.2cqw;
+  transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1), filter 0.2s ease-out;
+}
+.skill-tree-board .skill-attribute[data-attribute="ia"] .attribute-panel,
+.skill-tree-board .skill-attribute[data-attribute="devops"] .attribute-panel {
+  padding-top: 23%;
+}
+.skill-tree-board .attribute-panel:hover {
+  transform: scale(1.03);
+}
+.skill-tree-board .attribute-name {
+  font-size: 2.3cqw;
+  letter-spacing: 0.2cqw;
+  margin: 0;
+}
+.skill-tree-board .attribute-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.3cqw;
+}
+.skill-tree-board .attribute-icon {
+  width: 6.3cqw;
+  height: 6.3cqw;
+  margin: 0;
+}
+.skill-tree-board .attribute-level {
+  font-size: 3.4cqw;
+  margin: 0;
+}
+
+/* Botões fora do tile: embaixo na fileira de cima, em cima na de baixo */
+.skill-tree-board .attribute-controls {
+  position: absolute;
+  left: 50%;
+  top: 105.8%;
+  transform: translateX(-50%);
+  gap: 1.3cqw;
+  margin: 0;
+}
+.skill-tree-board .skill-attribute[data-attribute="ia"] .attribute-controls,
+.skill-tree-board .skill-attribute[data-attribute="devops"] .attribute-controls {
+  top: auto;
+  bottom: 106%;
+}
+.skill-tree-board .attr-btn {
+  width: 4.33cqw;
+  height: 5.38cqw;
+}
+
+/* Relic na base, centralizado */
+.skill-tree-board .relic-panel {
+  left: 31.36%;
+  top: 76.59%;
+  bottom: auto;
+  width: 37.27%;
+  height: 23.41%;
+  transform: none;
+  padding: 4.3% 0 0;
+  background-size: 100% 100%;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 1cqw;
+}
+.skill-tree-board .relic-icon {
+  width: 6.3cqw;
+  height: 6.3cqw;
+}
+.skill-tree-board .relic-text {
+  font-size: 1.9cqw;
+  letter-spacing: 0.2cqw;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-cyberpunk__glitch {
+    animation: none;
+  }
+}
+
+/* Níveis são predefinidos: sem botões e sem arrastar */
+.skill-tree-board .attribute-controls {
+  display: none;
+}
+.skill-tree-board .skill-attribute,
+.skill-tree-board .skill-attribute:active,
+.skill-tree-board .attribute-panel {
+  cursor: default;
+}
+
+/* Número no trapézio de cima do losango e rótulo no de baixo */
+.skill-tree-board .level-number {
+  top: 41.8%;
+}
+.skill-tree-board .level-label {
+  top: 61.6%;
+}
+
+/* Conteúdo dos nós centralizado no corpo do tile; nós agora são clicáveis */
+.skill-tree-board .attribute-panel,
+.skill-tree-board .skill-attribute[data-attribute="ia"] .attribute-panel,
+.skill-tree-board .skill-attribute[data-attribute="devops"] .attribute-panel {
+  justify-content: center;
+  padding: 0;
+  text-align: center;
+  cursor: pointer;
+}
+.skill-tree-board .attribute-panel:focus-visible {
+  outline: none;
+  filter: drop-shadow(0 0 22px rgba(0,255,136,0.95));
+}
+
+/* ==========================================================
+   TELA DE PERKS (abre ao clicar num ramo)
+   ========================================================== */
+.skill-tree-board {
+  transition: opacity 0.2s ease-out, transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.cyberpunk-skill-tree.is-perks .skill-tree-board {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -50%) scale(0.96);
+}
+
+.perk-view {
+  --perk-red: #3ad28b;
+  --perk-red-dim: #206e4a;
+  --perk-bg: #0a0e15;
+  --perk-cyan: #29ff9b;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  container-type: size;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(120% 90% at 50% 0%, #103a26 0%, #0c111a 45%, #0b1220 100%);
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(1.03);
+  transition: opacity 0.2s ease-out, transform 0.22s cubic-bezier(0.23, 1, 0.32, 1),
+    visibility 0s linear 0.22s;
+  font-family: var(--font-ui);
+}
+.perk-view.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
+.perk-board {
+  position: relative;
+  width: min(100cqw, 161.29cqh);
+  aspect-ratio: 1000 / 620;
+  container-type: inline-size;
+}
+
+/* Barra lateral com os ramos */
+.perk-sidebar {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8.5%;
+  display: flex;
+  flex-direction: column;
+}
+.perk-tab {
+  display: flex;
+  align-items: center;
+  gap: 1.1cqw;
+  padding: 1.1cqw 1.2cqw;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid rgba(41,255,155,0.12);
+  color: var(--perk-cyan);
+  font: inherit;
+  font-size: 2cqw;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out;
+}
+.perk-tab img {
+  width: 3.1cqw;
+  height: 3.1cqw;
+  object-fit: contain;
+}
+.perk-tab:hover {
+  background: rgba(41,255,155,0.08);
+}
+.perk-tab.is-active {
+  background: linear-gradient(90deg, rgba(41,255,155,0.35), rgba(41,255,155,0));
+}
+.perk-relic {
+  width: 3.1cqw;
+  margin: 1.2cqw 0 0 1.2cqw;
+  opacity: 0.8;
+}
+
+.perk-header {
+  position: absolute;
+  left: 11%;
+  top: 3%;
+}
+.perk-title {
+  margin: 0;
+  color: #fff;
+  font-size: 3.6cqw;
+  letter-spacing: 0.3cqw;
+  line-height: 1;
+}
+.perk-subtitle {
+  margin: 0.6cqw 0 0;
+  color: #53ffaf;
+  font-size: 1.5cqw;
+  letter-spacing: 0.1cqw;
+}
+
+/* Árvore */
+.perk-tree,
+.perk-nodes,
+.perk-links {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.perk-links {
+  pointer-events: none;
+}
+.perk-link-outer {
+  fill: none;
+  stroke: var(--perk-red-dim);
+  stroke-width: 7;
+}
+.perk-link-inner {
+  fill: none;
+  stroke: #070b12;
+  stroke-width: 3;
+}
+.perk-rail {
+  fill: none;
+  stroke: rgba(58,210,139,0.35);
+  stroke-width: 1;
+}
+
+.perk {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.23, 1, 0.32, 1), filter 0.18s ease-out;
+}
+.perk__frame {
+  position: absolute;
+  inset: 0;
+  background: var(--perk-red-dim);
+  clip-path: var(--shape);
+}
+.perk__frame::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: radial-gradient(circle at 50% 40%, #0d182a, var(--perk-bg) 70%);
+  clip-path: var(--shape);
+}
+.perk__icon {
+  position: absolute;
+  inset: 26%;
+  background: var(--perk-red);
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+  transition: background-color 0.18s ease-out;
+}
+.perk--major {
+  --shape: polygon(29% 0, 71% 0, 100% 29%, 100% 71%, 71% 100%, 29% 100%, 0 71%, 0 29%);
+}
+.perk--major .perk__icon {
+  inset: 28%;
+}
+.perk--mid {
+  --shape: polygon(16% 0, 84% 0, 100% 16%, 100% 84%, 84% 100%, 16% 100%, 0 84%, 0 16%);
+}
+.perk--side {
+  --shape: polygon(0 0, 38% 0, 46% 9%, 100% 9%, 100% 88%, 88% 100%, 0 100%);
+}
+.perk--side .perk__icon {
+  inset: 30% 24% 22%;
+}
+.perk__level {
+  position: absolute;
+  left: 50%;
+  bottom: -0.6cqw;
+  transform: translateX(-50%);
+  padding: 0.1cqw 0.7cqw;
+  background: #06090d;
+  border: 1px solid var(--perk-red-dim);
+  color: #3fffa5;
+  font-size: 1.4cqw;
+  line-height: 1.2;
+  letter-spacing: 0.1cqw;
+}
+.perk.is-maxed .perk__level {
+  color: var(--perk-cyan);
+}
+.perk__label {
+  display: none;
+}
+/* O site aplica `* { position: relative }`; a coluna não pode virar
+   referência de posicionamento dos perks (que são relativos à prancha). */
+.perk-col {
+  position: static;
+}
+.perk:hover,
+.perk:focus-visible {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 10px rgba(83,255,175,0.55));
+  outline: none;
+}
+.perk:hover .perk__icon,
+.perk:focus-visible .perk__icon {
+  background: #70ffbc;
+}
+.perk:hover .perk__frame,
+.perk:focus-visible .perk__frame {
+  background: var(--perk-red);
+}
+
+/* Tooltip */
+.perk-tooltip {
+  position: absolute;
+  z-index: 5;
+  width: 25cqw;
+  padding: 1.6cqw 1.7cqw 1.2cqw;
+  background: #050507;
+  border: 1px solid rgba(63,255,165,0.45);
+  color: #d9d9de;
+  font-size: 1.45cqw;
+  line-height: 1.35;
+  pointer-events: none;
+  animation: perkTooltipIn 0.14s ease-out;
+}
+.perk-tooltip[hidden] {
+  display: none;
+}
+.perk-tooltip strong {
+  display: block;
+  color: #fff;
+  font-size: 1.8cqw;
+  letter-spacing: 0.1cqw;
+  text-transform: uppercase;
+}
+.perk-tooltip em {
+  display: block;
+  margin-top: 0.5cqw;
+  color: #53ffaf;
+  font-style: normal;
+}
+.perk-tooltip p {
+  margin: 0.9cqw 0 0;
+}
+.perk-tooltip__level {
+  display: block;
+  margin-top: 1.1cqw;
+  padding-top: 0.9cqw;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--perk-cyan);
+  letter-spacing: 0.1cqw;
+}
+@keyframes perkTooltipIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.4cqw);
+  }
+}
+
+/* Rodapé */
+.perk-footer {
+  position: absolute;
+  left: 11%;
+  right: 3%;
+  bottom: 2.5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2cqw;
+  font-size: 1.5cqw;
+}
+.perk-back {
+  padding: 0.8cqw 1.6cqw;
+  background: rgba(4,6,10,0.6);
+  border: 1px solid var(--perk-red-dim);
+  color: var(--perk-cyan);
+  font: inherit;
+  letter-spacing: 0.1cqw;
+  cursor: pointer;
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 94% 100%, 0 100%);
+  transition: border-color 0.15s ease-out, background-color 0.15s ease-out;
+}
+.perk-back:hover,
+.perk-back:focus-visible {
+  border-color: var(--perk-red);
+  background: rgba(58,210,139,0.15);
+  outline: none;
+}
+.perk-hint {
+  color: #53ffaf;
+  opacity: 0.85;
+}
+.perk-count {
+  color: #3fffa5;
+  letter-spacing: 0.1cqw;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .perk-view,
+  .skill-tree-board,
+  .perk {
+    transition: none;
+  }
+  .perk-tooltip {
+    animation: none;
+  }
+}
+
+/* Celular: a árvore fica no fluxo da página, então os perks abrem em tela
+   cheia, como lista (ícone + nome + nível) com o detalhe embaixo. */
+@media (max-width: 768px) {
+  .perk-view {
+    position: fixed;
+    z-index: 10000;
+    display: block;
+    overflow-y: auto;
+    container-type: normal;
+  }
+  .perk-board {
+    width: 100%;
+    aspect-ratio: auto;
+    min-height: 100%;
+    padding: 72px 16px 140px;
+    container-type: normal;
+    font-size: 15px;
+  }
+  .perk-sidebar {
+    position: static;
+    transform: none;
+    width: auto;
+    flex-direction: row;
+    margin-bottom: 16px;
+  }
+  .perk-tab {
+    flex: 1;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 4px;
+    font-size: 16px;
+    border-bottom: 2px solid rgba(41,255,155,0.12);
+  }
+  .perk-tab img {
+    width: 22px;
+    height: 22px;
+  }
+  .perk-relic {
+    display: none;
+  }
+  .perk-header {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+  }
+  .perk-title {
+    font-size: 28px;
+  }
+  .perk-subtitle {
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .perk-tree,
+  .perk-nodes {
+    position: static;
+    height: auto;
+  }
+  .perk-links {
+    display: none;
+  }
+  .perk-nodes {
+    display: grid;
+    gap: 14px;
+  }
+  .perk-col {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid rgba(32,110,74,0.8);
+    background: rgba(4,6,10,0.5);
+  }
+  .perk {
+    position: relative;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    height: 48px !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-left: 60px;
+    text-align: left;
+  }
+  .perk__frame {
+    inset: 0 auto 0 0;
+    width: 48px;
+  }
+  .perk__label {
+    display: block;
+    color: #fff;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+  .perk__level {
+    position: static;
+    transform: none;
+    margin-left: auto;
+    font-size: 13px;
+    order: 2;
+  }
+  .perk:hover,
+  .perk:focus-visible {
+    transform: none;
+  }
+  .perk-tooltip {
+    position: fixed;
+    left: 12px !important;
+    right: 12px !important;
+    top: auto !important;
+    bottom: 76px;
+    width: auto;
+    font-size: 14px;
+    padding: 14px 16px;
+  }
+  .perk-tooltip strong {
+    font-size: 16px;
+  }
+  .perk-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 12px 16px;
+    background: #05070b;
+    font-size: 14px;
+  }
+  .perk-hint {
+    display: none;
+  }
+}
+
+/* Aviso "toque/clique para interagir" no canto livre da prancha */
+.skill-interact-hint {
+  position: absolute;
+  left: 0;
+  top: 88.5%;
+  width: 31%;
+  display: flex;
+  align-items: center;
+  gap: 1.4cqw;
+  color: #29ff9b;
+  font-family: var(--font-ui);
+  font-size: clamp(12px, 2.8cqw, 18px);
+  font-weight: 700;
+  letter-spacing: 0.25cqw;
+  line-height: 1.15;
+  text-shadow: 0 0 8px rgba(41,255,155,0.6);
+  pointer-events: none;
+  z-index: 4;
+  animation: interactHintPulse 2.4s ease-in-out infinite;
+}
+.skill-interact-hint__icon {
+  flex: none;
+  width: clamp(18px, 4.2cqw, 30px);
+  aspect-ratio: 1;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+  filter: drop-shadow(0 0 6px rgba(41,255,155,0.7));
+}
+@keyframes interactHintPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skill-interact-hint {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+
+/* A abertura (Svelte) deixa um <main> solto no fim da página (não dá para
+   removê-lo do DOM: o Svelte ainda o controla e quebraria ao desmontar),
+   com "YOU ARE NOT AUTHORIZED..." — depois da entrada ele não serve mais. */
+body > main[class*="svelte"] {
+  display: none !important;
+}
+
+/* ==========================================================
+   Moldura HUD (cantos em colchete), como nas páginas do
+   Cyberpunk 2077 / Phantom Liberty
+   ========================================================== */
+.hud-frame {
+  --hud: #3ffea5;
+  --hud-size: 18px;
+  --hud-width: 2px;
+  background:
+    linear-gradient(var(--hud) 0 0) top left / var(--hud-size) var(--hud-width) no-repeat,
+    linear-gradient(var(--hud) 0 0) top left / var(--hud-width) var(--hud-size) no-repeat,
+    linear-gradient(var(--hud) 0 0) top right / var(--hud-size) var(--hud-width) no-repeat,
+    linear-gradient(var(--hud) 0 0) top right / var(--hud-width) var(--hud-size) no-repeat,
+    linear-gradient(var(--hud) 0 0) bottom left / var(--hud-size) var(--hud-width) no-repeat,
+    linear-gradient(var(--hud) 0 0) bottom left / var(--hud-width) var(--hud-size) no-repeat,
+    linear-gradient(var(--hud) 0 0) bottom right / var(--hud-size) var(--hud-width) no-repeat,
+    linear-gradient(var(--hud) 0 0) bottom right / var(--hud-width) var(--hud-size) no-repeat,
+    rgba(8, 11, 17, 0.72);
+}
+
+/* Texto do "Sobre mim" emoldurado, como a introdução do Phantom Liberty */
+#sobre-description.hud-frame {
+  padding: 22px 28px;
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+/* ==========================================================
+   EXPERIÊNCIA — "informações da missão"
+   ========================================================== */
+.mission {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.75fr) 1.6fr;
+  gap: 40px;
+  align-items: start;
+  margin-top: 28px;
+}
+.mission__list {
+  display: flex;
+  flex-direction: column;
+}
+.mission__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 16px 0 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e8f0ff;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.15s ease-out;
+}
+.mission__item::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 2px;
+  background: #3ffea5;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.mission__company {
+  font-family: var(--font-ui);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+.mission__period {
+  color: var(--muted, #9bb1d1);
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.mission__item:hover {
+  color: #00ff88;
+}
+.mission__item.is-active {
+  color: #3ffea5;
+}
+.mission__item.is-active::after {
+  transform: scaleX(1);
+}
+.mission__item:focus-visible {
+  outline: 1px dashed #00ff88;
+  outline-offset: 4px;
+}
+
+.mission__detail {
+  padding: 30px 34px 32px;
+  min-height: 260px;
+}
+.mission__detail.is-swapping {
+  animation: missionIn 0.22s cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes missionIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.mission__file {
+  color: #2a7cff;
+  font-family: "VT323", monospace;
+  font-size: 16px;
+  letter-spacing: 3px;
+}
+.mission__role {
+  margin-top: 6px;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+.mission__meta {
+  margin-top: 8px;
+  color: #00ff88;
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.mission__text {
+  max-width: 60ch;
+  margin: 18px 0 0;
+  color: #c9d6ea;
+  font-size: 17px;
+  line-height: 1.55;
+}
+.mission__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.mission__stack li {
+  padding: 5px 12px;
+  border: 1px solid rgba(63,254,165,0.5);
+  color: #3ffea5;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, 100% 65%, calc(100% - 7px) 100%, 0 100%);
+}
+
+@media (max-width: 768px) {
+  .mission {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .mission__item {
+    padding-left: 14px;
+  }
+  .mission__item::after {
+    left: 14px;
+    width: calc(100% - 14px);
+  }
+  .mission__company {
+    font-size: 20px;
+  }
+  .mission__detail {
+    padding: 22px 20px 24px;
+    min-height: 0;
+  }
+  .mission__role {
+    font-size: 26px;
+  }
+  .mission__text {
+    font-size: 16px;
+  }
+  #sobre-description.hud-frame {
+    padding: 18px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mission__detail.is-swapping {
+    animation: none;
+  }
+  .mission__item::after {
+    transition: none;
+  }
+}
+
+/* ==========================================================
+   REDESIGN — linguagem visual do Cyberpunk 2077: Phantom Liberty
+   Amarelo de destaque, contornos finos com cantos cortados,
+   colchetes HUD, títulos condensados e faixas recortadas.
+   ========================================================== */
+:root {
+  --pl-yellow: #0afc8b;
+  --pl-red: #0062ff;
+  --pl-cyan: #00ff88;
+  --pl-ink: #0a0a0f;
+  --pl-panel: #0e0b12;
+}
+
+/* Seções: menos vão vazio (skills e contato mantêm a tela cheia por
+   causa da coreografia do modelo 3D) */
+section.panel {
+  min-height: auto;
+  padding: 112px 0 88px;
+  align-items: flex-start;
+}
+#skills.panel,
+#contato.panel {
+  min-height: 100svh;
+}
+
+/* Títulos de seção */
+.panel h2.cyberpunk {
+  margin: 0 0 32px;
+  padding-bottom: 18px;
+  color: var(--pl-yellow);
+  font-family: var(--font-ui);
+  font-size: clamp(44px, 5.4vw, 76px);
+  font-weight: 400;
+  letter-spacing: 2px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.panel h2.cyberpunk:before {
+  background-color: var(--pl-yellow);
+  opacity: 0.85;
+}
+
+/* ---------- Menu ---------- */
+header {
+  background: linear-gradient(180deg, rgba(8, 8, 12, 0.94), rgba(8, 8, 12, 0.78));
+}
+header::after {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(10,252,139,0.45), transparent);
+  box-shadow: none;
+}
+.nav-links {
+  flex: 0 1 auto;
+  margin-left: auto;
+  gap: 0;
+  align-items: stretch;
+  border: 1px solid rgba(10,252,139,0.6);
+  background:
+    linear-gradient(135deg, transparent 10.6px, rgba(10,252,139,0.6) 10.6px 11.8px, transparent 11.8px),
+    rgba(0, 0, 0, 0.55);
+  clip-path: polygon(16px 0, 100% 0, 100% 100%, 0 100%, 0 16px);
+}
+.nav-links a {
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 0;
+  color: #f1f1f4;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  transition: color 0.15s ease-out, background-color 0.15s ease-out;
+}
+.nav-links a:hover {
+  color: var(--pl-yellow);
+}
+.nav-links a.active {
+  color: var(--pl-yellow);
+  font-size: 15px;
+  box-shadow: inset 0 -2px 0 var(--pl-yellow);
+}
+.nav-links a#nav-contato {
+  background: var(--pl-yellow);
+  color: var(--pl-ink);
+  font-weight: 700;
+}
+.nav-links a#nav-contato:hover {
+  background: #fff;
+}
+
+/* ---------- Botões recortados ---------- */
+.btn-cp,
+#links-container a,
+#form-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 26px;
+  border: 1px solid var(--pl-yellow);
+  background:
+    linear-gradient(-45deg, transparent 9.2px, var(--pl-yellow) 9.2px 10.6px, transparent 10.6px),
+    rgba(8, 8, 12, 0.6);
+  color: var(--pl-yellow);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-decoration: none;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+  cursor: pointer;
+  transition: background-color 0.15s ease-out, color 0.15s ease-out;
+}
+.btn-cp:hover,
+#links-container a:hover,
+#form-submit:hover {
+  background: var(--pl-yellow);
+  color: var(--pl-ink);
+}
+.btn-cp:focus-visible,
+#links-container a:focus-visible,
+#form-submit:focus-visible {
+  outline: 2px solid var(--pl-cyan);
+  outline-offset: 3px;
+}
+.btn-cp:active,
+#links-container a:active,
+#form-submit:active {
+  transform: scale(0.97);
+}
+
+/* ---------- Hero ---------- */
+.hero .inner {
+  padding-bottom: 18svh;
+}
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 30px;
+}
+.hero-ctas .btn-cp {
+  min-width: 210px;
+  min-height: 52px;
+}
+.hero .chip {
+  border: 1px solid rgba(0,255,136,0.45);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.45);
+  color: #bfffe1;
+  font-size: 0.82rem;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+
+/* Faixa "A liberdade sempre tem um preço" */
+.hero-tagline {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  width: min(1200px, 92vw);
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
+  border-top: 1px solid rgba(10,252,139,0.22);
+  pointer-events: none;
+}
+.hero-tagline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  height: 3px;
+  background: radial-gradient(circle, rgba(10,252,139,0.55) 1.2px, transparent 1.8px) 0 50% / 36px 3px repeat-x;
+}
+.hero-tagline span {
+  padding: 10px 56px 8px;
+  background:
+    linear-gradient(var(--pl-yellow) 0 0) top left / 22px 1.5px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) top left / 1.5px 22px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) top right / 22px 1.5px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) top right / 1.5px 22px no-repeat,
+    #0a0a0f;
+  color: var(--pl-yellow);
+  font-family: var(--font-ui);
+  font-size: clamp(22px, 2.8vw, 36px);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  z-index: 1;
+}
+
+/* ---------- Cards ---------- */
+.cards {
+  gap: 22px;
+}
+.card.card-cyberpunk {
+  --radius: 0px;
+  width: 100%;
+  min-height: 0;
+  padding: 28px 28px 26px;
+  border: 1px solid rgba(0,98,255,0.35);
+  background:
+    linear-gradient(var(--pl-yellow) 0 0) top left / 16px 2px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) top left / 2px 16px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) bottom right / 16px 2px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) bottom right / 2px 16px no-repeat,
+    linear-gradient(160deg, #0a111b 0%, var(--pl-panel) 65%);
+  box-shadow: none;
+  color: #d6deea;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  text-transform: none;
+  transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.2s ease-out;
+}
+.card.card-cyberpunk p {
+  margin: 14px 0 0;
+  color: #c9d3e2;
+  font-size: 16.5px;
+  line-height: 1.55;
+}
+.card.card-cyberpunk h3.cyberpunk {
+  margin: 0;
+  color: var(--pl-yellow);
+  font-family: var(--font-ui);
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+.card.card-cyberpunk h3.cyberpunk:before {
+  background-color: rgba(0,98,255,0.85);
+}
+.card.card-cyberpunk .card-period {
+  margin: 12px 0 0;
+  color: var(--pl-cyan);
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+.card.card-cyberpunk:hover {
+  transform: translateY(-4px);
+  border-color: rgba(10,252,139,0.7);
+}
+/* "sombra" amarela deslocada atrás do card, como os blocos do Phantom Liberty.
+   É box-shadow (sempre atrás do fundo); um pseudo-elemento ficaria por cima,
+   porque o card vira contexto de empilhamento quando se move no hover. */
+.card.card-cyberpunk:hover {
+  box-shadow: 6px 6px 0 var(--pl-yellow);
+}
+.card.card-cyberpunk:hover:before {
+  display: none;
+}
+.card.card-cyberpunk:hover:after {
+  display: none;
+}
+/* Glitch translúcido: mantém o efeito sem esconder o texto do card */
+.card.card-cyberpunk .card-cyberpunk__glitch {
+  background: rgba(10,252,139,0.12);
+  border-top: 1px solid rgba(10,252,139,0.7);
+  border-bottom: 1px solid rgba(10,252,139,0.7);
+  color: rgba(10,252,139,0.55);
+  text-shadow: 2px 0 rgba(0,255,136,0.5), -2px 0 rgba(0,98,255,0.5);
+}
+.card.card-cyberpunk .card-cyberpunk__glitch:before {
+  display: none;
+}
+.card.card-cyberpunk .mission__stack {
+  margin-top: 18px;
+}
+
+/* ---------- Experiência (mais conteúdo, menos vão) ---------- */
+.mission {
+  gap: 48px;
+}
+.mission__company {
+  font-size: 30px;
+}
+.mission__period {
+  font-size: 14.5px;
+}
+.mission__item {
+  padding: 20px 0 16px;
+}
+.mission__detail {
+  padding: 38px 42px 40px;
+  min-height: 0;
+}
+.mission__role {
+  font-size: 42px;
+}
+.mission__label {
+  margin-top: 22px;
+  color: var(--pl-red);
+  font-family: "VT323", monospace;
+  font-size: 16px;
+  letter-spacing: 3px;
+}
+.mission__highlights {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.mission__highlights li {
+  padding-left: 22px;
+  color: #e3e9f3;
+  font-size: 16.5px;
+  line-height: 1.45;
+}
+.mission__highlights li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 8px;
+  height: 8px;
+  background: var(--pl-yellow);
+  clip-path: polygon(0 0, 100% 0, 100% 60%, 60% 100%, 0 100%);
+}
+.hud-frame {
+  --hud: var(--pl-yellow);
+}
+.mission__item.is-active {
+  color: var(--pl-yellow);
+}
+.mission__item::after {
+  background: var(--pl-yellow);
+}
+.mission__stack li {
+  border-color: rgba(10,252,139,0.5);
+  color: var(--pl-yellow);
+}
+
+/* ---------- Contato: faixa amarela recortada ---------- */
+#contato .cards {
+  margin-top: 36px;
+  padding: 76px 0 80px;
+}
+#contato .cards::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 50vw);
+  right: calc(50% - 50vw);
+  z-index: -1;
+  background: var(--pl-yellow);
+  clip-path: polygon(
+    0 14px, 8% 14px, 9% 0, 10% 14px, 26% 14px, 27.5% 5px, 29% 14px,
+    55% 14px, 56% 0, 57% 14px, 80% 14px, 81% 6px, 82% 14px, 100% 14px,
+    100% calc(100% - 14px), 90% calc(100% - 14px), 89% 100%, 88% calc(100% - 14px),
+    62% calc(100% - 14px), 60.5% calc(100% - 5px), 59% calc(100% - 14px),
+    37% calc(100% - 14px), 36% 100%, 35% calc(100% - 14px),
+    12% calc(100% - 14px), 11% calc(100% - 6px), 10% calc(100% - 14px), 0 calc(100% - 14px)
+  );
+}
+#contato .card.card-cyberpunk {
+  border-color: #000;
+  background:
+    linear-gradient(var(--pl-yellow) 0 0) top left / 16px 2px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) top left / 2px 16px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) bottom right / 16px 2px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) bottom right / 2px 16px no-repeat,
+    var(--pl-ink);
+}
+#contato .card.card-cyberpunk:hover {
+  box-shadow: 6px 6px 0 var(--pl-red);
+}
+
+/* ---------- Rodapé ---------- */
+.site-footer {
+  padding: 40px 0 34px;
+  background: #000;
+  color: #8e9bb0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.site-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.site-footer__social {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 22px;
+}
+.site-footer__label {
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.site-footer__social-links { gap: 12px; }
+.site-footer__social .social-link { display: grid; color: var(--accent); font-weight: 400; letter-spacing: 0; }
+.site-footer__social .social-link:hover { color: var(--pl-ink); }
+.site-footer__copy {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ---------- Celular ---------- */
+@media (max-width: 768px) {
+  section.panel {
+    padding: 88px 0 64px;
+  }
+  .nav-links {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .nav-links a {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  .nav-links a.active {
+    font-size: 13px;
+  }
+  .hero-ctas .btn-cp {
+    flex: 1 1 100%;
+  }
+  .hero-tagline span {
+    padding: 8px 24px 6px;
+  }
+  .card.card-cyberpunk {
+    padding: 22px 20px;
+  }
+  .mission__company {
+    font-size: 22px;
+  }
+  .mission__detail {
+    padding: 24px 20px 26px;
+  }
+  .mission__role {
+    font-size: 30px;
+  }
+  #contato .cards {
+    padding: 56px 0 60px;
+  }
+  .site-footer__inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ---------- Ajustes do redesign ---------- */
+/* A faixa amarela ocupa a largura toda sem criar rolagem horizontal */
+#contato.panel {
+  overflow-x: clip;
+  padding-bottom: 0;
+}
+#contato .cards {
+  align-items: start;
+  margin-bottom: 0;
+}
+/* rodapé encosta na faixa (os dentes dela ficam por cima) */
+.site-footer {
+  margin-top: -14px;
+  padding-top: 54px;
+}
+
+/* Formulário no estilo do boletim do Phantom Liberty */
+#contato-form {
+  align-items: stretch;
+}
+#contato-form br {
+  display: none;
+}
+#contato-form label {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-align: left;
+  text-transform: uppercase;
+}
+#contato-form .form-control {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--pl-yellow);
+  background: transparent;
+  clip-path: none;
+  text-align: left;
+}
+#contato-form .form-control::before {
+  display: none;
+}
+#contato-form .form-control input,
+#contato-form .form-control textarea {
+  padding: 10px 2px;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 17px;
+  text-align: left;
+}
+#contato-form .form-control:focus-within {
+  border-bottom-color: var(--pl-cyan);
+  box-shadow: 0 1px 0 var(--pl-cyan);
+}
+#contato-form #form-submit {
+  align-self: flex-start;
+  margin-top: 26px;
+}
+
+#contato-form h3.cyberpunk {
+  align-self: stretch;
+  text-align: left;
+}
+
+/* ==========================================================
+   HEADER — como o do cyberpunk.net: sem barra de fundo, logo
+   grande à esquerda e navegação flutuante à direita
+   ========================================================== */
+header {
+  padding: 18px 0 0;
+  background: none;
+  backdrop-filter: none;
+}
+header::after {
+  display: none;
+}
+header nav {
+  padding: 0;
+}
+.brand {
+  padding: 0;
+  gap: 0;
+}
+.brand .dot {
+  display: none;
+}
+.brand strong {
+  display: inline-block;
+  color: var(--pl-yellow);
+  font-family: var(--font-ui);
+  font-size: 34px;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 1.5px;
+  line-height: 1;
+  transform: skewX(-12deg);
+  text-shadow: 2px 2px 0 var(--pl-cyan), 0 0 18px rgba(10,252,139,0.25);
+}
+.nav-links {
+  height: 48px;
+  border: 1px solid rgba(10,252,139,0.55);
+  background:
+    linear-gradient(135deg, transparent 10.6px, rgba(10,252,139,0.55) 10.6px 11.8px, transparent 11.8px),
+    rgba(4,12,8,0.78);
+  backdrop-filter: blur(6px);
+  clip-path: polygon(16px 0, 100% 0, 100% 100%, 0 100%, 0 16px);
+}
+.nav-links a {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+.nav-links a:first-child {
+  padding-left: 30px;
+}
+.nav-links a:hover {
+  background: var(--pl-yellow);
+  color: var(--pl-ink);
+}
+.nav-links a.active {
+  box-shadow: none;
+  background: rgba(10,252,139,0.14);
+  color: var(--pl-yellow);
+  font-size: 16px;
+}
+.nav-links a.active:hover {
+  background: var(--pl-yellow);
+  color: var(--pl-ink);
+}
+/* "Contato" como o COMPRE JÁ: bloco amarelo com o canto cortado */
+.nav-links a#nav-contato {
+  margin-left: 10px;
+  padding: 0 30px;
+  border-left: 1px solid rgba(10,252,139,0.35);
+  background: var(--pl-yellow);
+  color: var(--pl-ink);
+  font-weight: 700;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+}
+.nav-links a#nav-contato:hover {
+  background: #fff;
+  color: var(--pl-ink);
+}
+
+/* ---------- Hero: conteúdo centrado, sem o vão em cima ---------- */
+.hero {
+  align-items: center;
+}
+.hero .inner {
+  padding: 150px 0 190px;
+}
+.hero .subtitle {
+  max-width: 58ch;
+}
+
+/* ---------- Contato: faixa amarela sempre colada no rodapé ---------- */
+#contato.panel {
+  align-items: stretch;
+}
+#contato > .container {
+  display: flex;
+  flex-direction: column;
+}
+#contato .cards {
+  margin-top: auto;
+}
+
+@media (max-width: 768px) {
+  header {
+    padding: 10px 0 0;
+  }
+  .brand strong {
+    font-size: 26px;
+  }
+  .nav-links {
+    height: auto;
+  }
+  .nav-links a,
+  .nav-links a:first-child {
+    padding: 9px 11px;
+    font-size: 13px;
+  }
+  .nav-links a.active {
+    font-size: 13px;
+  }
+  .nav-links a#nav-contato {
+    margin-left: 0;
+    padding: 9px 16px;
+  }
+  .hero .inner {
+    padding: 140px 0 150px;
+  }
+}
+
+/* ==========================================================
+   RODADA 4 — referências do cyberpunk.net (hero, Mídia,
+   Novidades, "Comemore" e boletim)
+   ========================================================== */
+
+/* ---------- Títulos centralizados + introdução ---------- */
+.panel h2.cyberpunk {
+  text-align: center;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+}
+.panel h2.cyberpunk:before {
+  display: none;
+}
+.section-intro {
+  max-width: 62ch;
+  margin: 0 auto 40px;
+  color: var(--pl-yellow);
+  font-size: 17px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ---------- Hero ---------- */
+.hero h1#hero-title {
+  max-width: 12ch;
+  margin: 10px 0 18px;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: clamp(58px, 7.4vw, 132px);
+  font-weight: 400;
+  letter-spacing: 1px;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+.hero .kicker {
+  color: var(--pl-yellow);
+}
+/* botões com o "tique" à esquerda, como COMPRE JÁ / ASSISTIR AO TRAILER */
+.btn-cp::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 34%;
+  width: 9px;
+  height: 32%;
+  border-top: 1px solid var(--pl-yellow);
+  border-bottom: 1px solid var(--pl-yellow);
+  border-right: 1px solid var(--pl-yellow);
+  background: var(--pl-ink);
+}
+.btn-cp:hover::before {
+  background: var(--pl-yellow);
+  border-color: var(--pl-ink);
+}
+/* faixa final: só colchetes e texto, sem caixa */
+.hero-tagline span {
+  padding: 24px 12vw 20px;
+  background:
+    linear-gradient(var(--pl-yellow) 0 0) top left / 28px 1.5px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) top left / 1.5px 28px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) top right / 28px 1.5px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) top right / 1.5px 28px no-repeat;
+}
+.hero-tagline::after {
+  bottom: 2px;
+}
+
+/* ---------- Seções emolduradas (colchetes nos cantos) ---------- */
+#servicos > .container,
+#projetos > .container {
+  padding: 56px clamp(20px, 3vw, 44px);
+  background:
+    linear-gradient(var(--pl-yellow) 0 0) top left / 28px 2px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) top left / 2px 28px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) top right / 28px 2px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) top right / 2px 28px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) bottom left / 28px 2px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) bottom left / 2px 28px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) bottom right / 28px 2px no-repeat,
+    linear-gradient(var(--pl-yellow) 0 0) bottom right / 2px 28px no-repeat,
+    linear-gradient(rgba(10,252,139,0.18) 0 0) top center / calc(100% - 64px) 1px no-repeat,
+    linear-gradient(rgba(10,252,139,0.18) 0 0) bottom center / calc(100% - 64px) 1px no-repeat;
+}
+
+/* ---------- Projetos: cards de mídia ---------- */
+.project-carousel {
+  position: relative;
+  z-index: 10;
+}
+.project-carousel__track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 2px;
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+.project-carousel__track::-webkit-scrollbar { display: none; }
+.card.card-cyberpunk.project-card {
+  flex: 0 0 100%;
+  min-width: 0;
+  min-height: 380px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  scroll-snap-align: start;
+  align-items: stretch;
+}
+.card.card-cyberpunk.project-card:hover {
+  box-shadow: none;
+  transform: none;
+}
+.project-card__visual {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 380px;
+  padding: clamp(30px, 6vw, 64px);
+  background: radial-gradient(rgba(10,252,139,0.12) 1px, transparent 1.5px) 0 0 / 18px 18px, #0c0a10;
+  isolation: isolate;
+}
+.project-card__background {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.project-card__background path {
+  fill: none;
+  stroke: var(--pl-yellow);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+.project-card__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(100%, 720px);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.project-card__code {
+  display: block;
+  color: #8b93a3;
+  font-family: "VT323", monospace;
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-align: left;
+}
+.project-card__heading {
+  margin: 8px 0 0;
+  color: var(--pl-yellow);
+  font-family: var(--font-ui);
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.12;
+  text-shadow: 2px 2px 0 rgba(0,255,136,0.35);
+}
+.project-card__tagline {
+  margin: 0;
+  color: #b6c1cb;
+  font-size: 16px;
+}
+.project-card__description {
+  max-width: 62ch;
+  margin: 0;
+  color: #e3e7e9;
+  line-height: 1.65;
+}
+.project-card .mission__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.project-card .mission__stack li {
+  border: 1px solid rgba(10,252,139,.45);
+  padding: 4px 8px;
+  color: #b7ffd9;
+  font-size: 12px;
+}
+.project-card__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  border-bottom: 1px solid var(--pl-yellow);
+  padding: 8px 0;
+  color: var(--pl-yellow);
+  font-weight: 700;
+  text-decoration: none;
+}
+.project-card__action:hover { color: #fff; }
+.project-carousel__controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 14px;
+}
+.project-carousel__button {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--pl-yellow);
+  background: transparent;
+  color: var(--pl-yellow);
+  cursor: pointer;
+}
+.project-carousel__button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+.project-carousel__button svg {
+  width: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+.project-carousel__count {
+  min-width: 3.5ch;
+  color: var(--pl-yellow);
+  font-family: var(--font-ui);
+  font-size: 18px;
+  text-align: center;
+}
+
+/* ---------- Experiência: abas + painel "Novidades" ---------- */
+.mission {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+.mission__list {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-self: center;
+  border: 1px solid var(--pl-yellow);
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}
+.mission__item,
+.mission__item:first-child {
+  padding: 13px 28px;
+  border: 0;
+}
+.mission__item::after {
+  display: none;
+}
+.mission__item .mission__period {
+  display: none;
+}
+.mission__item .mission__company {
+  color: var(--pl-yellow);
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+.mission__item:hover .mission__company {
+  color: #fff;
+}
+.mission__item.is-active {
+  background: var(--pl-yellow);
+}
+.mission__item.is-active .mission__company {
+  color: var(--pl-ink);
+}
+.mission__detail {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  padding: 0;
+  border: 10px solid var(--pl-yellow);
+  background: var(--pl-yellow);
+}
+.mission__main {
+  padding: 40px 42px 42px;
+  background:
+    linear-gradient(150deg, rgba(0,98,255,0.2), transparent 55%),
+    var(--pl-ink);
+}
+.mission__aside {
+  padding: 40px 38px;
+  color: var(--pl-ink);
+}
+.mission__aside-title {
+  font-family: var(--font-ui);
+  font-size: 46px;
+  letter-spacing: 1px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.mission__aside .mission__text {
+  margin-top: 14px;
+  color: #1a1a1a;
+  font-size: 17px;
+}
+.mission__aside .mission__stack li {
+  border-color: var(--pl-ink);
+  color: var(--pl-ink);
+  font-weight: 700;
+}
+
+/* ---------- Contato: faixa do boletim ---------- */
+#contato .cards {
+  margin-top: 36px;
+  padding: 0;
+}
+#contato .cards::before {
+  display: none;
+}
+.contact-band {
+  position: relative;
+  z-index: 10;
+  margin-top: auto;
+  padding: 84px 0 92px;
+}
+.contact-band::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 50vw);
+  right: calc(50% - 50vw);
+  z-index: -1;
+  background: var(--pl-yellow);
+  clip-path: polygon(
+    0 14px, 8% 14px, 9% 0, 10% 14px, 26% 14px, 27.5% 5px, 29% 14px,
+    55% 14px, 56% 0, 57% 14px, 80% 14px, 81% 6px, 82% 14px, 100% 14px,
+    100% calc(100% - 14px), 90% calc(100% - 14px), 89% 100%, 88% calc(100% - 14px),
+    62% calc(100% - 14px), 60.5% calc(100% - 5px), 59% calc(100% - 14px),
+    37% calc(100% - 14px), 36% 100%, 35% calc(100% - 14px),
+    12% calc(100% - 14px), 11% calc(100% - 6px), 10% calc(100% - 14px), 0 calc(100% - 14px)
+  );
+}
+.contact-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.contact-intro__icon {
+  width: 84px;
+  height: 84px;
+  background: var(--pl-ink);
+  -webkit-mask: url("/icons/lu/triangle-alert.svg") center / contain no-repeat;
+  mask: url("/icons/lu/triangle-alert.svg") center / contain no-repeat;
+}
+#contato .contact-intro h2.cyberpunk {
+  margin: 18px 0 8px;
+  color: var(--pl-ink);
+  font-family: var(--font-ui);
+  font-size: clamp(30px, 3.2vw, 40px);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: none !important;
+  filter: none;
+}
+.contact-intro__text {
+  margin: 0;
+  color: #1c1c1c;
+  font-size: 19px;
+}
+
+/* cards direto no amarelo, em preto (como o formulário do boletim) */
+#contato .card.card-cyberpunk {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--pl-ink);
+}
+#contato .card.card-cyberpunk:hover {
+  transform: none;
+  box-shadow: none;
+}
+#contato .card-cyberpunk__glitch {
+  display: none !important;
+}
+#contato .card.card-cyberpunk h3.cyberpunk {
+  color: var(--pl-ink);
+  font-size: 26px;
+}
+#contato .card.card-cyberpunk h3.cyberpunk:before {
+  background-color: var(--pl-ink);
+}
+#contato .card.card-cyberpunk p,
+#contato .card.card-cyberpunk .muted,
+#contato-form label,
+#contato-tweaks-card label {
+  color: var(--pl-ink);
+}
+#contato-form .form-control {
+  border-bottom-color: var(--pl-ink);
+}
+#contato-form .form-control input,
+#contato-form .form-control textarea {
+  color: var(--pl-ink);
+}
+#contato-form .form-control:focus-within {
+  border-bottom-color: var(--pl-red);
+  box-shadow: 0 1px 0 var(--pl-red);
+}
+#links-container a,
+#form-submit,
+#contato .controls-btn {
+  border-color: var(--pl-ink);
+  background:
+    linear-gradient(-45deg, transparent 9.2px, var(--pl-ink) 9.2px 10.6px, transparent 10.6px),
+    transparent;
+  color: var(--pl-ink);
+}
+#links-container a:hover,
+#form-submit:hover,
+#contato .controls-btn:hover {
+  background: var(--pl-ink);
+  color: var(--pl-yellow);
+}
+
+@media (max-width: 768px) {
+  #servicos > .container,
+  #projetos > .container {
+    padding: 40px 18px;
+  }
+  .mission__list {
+    align-self: stretch;
+    clip-path: none;
+  }
+  .mission__item,
+  .mission__item:first-child {
+    flex: 1 1 auto;
+    padding: 11px 14px;
+  }
+  .mission__detail {
+    grid-template-columns: 1fr;
+    border-width: 6px;
+  }
+  .mission__main,
+  .mission__aside {
+    padding: 24px 20px;
+  }
+  .project-card__heading { font-size: 28px; }
+  .hero-tagline span {
+    padding: 18px 20px 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .card.card-cyberpunk.project-card,
+  .project-card__visual { min-height: 420px; }
+  .project-card__visual { padding: 28px 22px; }
+  .project-card__background path { stroke-width: 2px; }
+  .project-card__heading { font-size: 25px; }
+}
+
+/* Título do hero: separação RGB nítida em vez do brilho borrado do .glitch */
+.hero h1#hero-title {
+  text-shadow: 1.5px 0 0 rgba(0,255,136,0.8), -1.5px 0 0 rgba(0,98,255,0.8);
+  filter: none;
+}
+
+/* Serviços em três colunas no desktop. */
+@media (min-width: 1000px) {
+  #servicos .cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 769px) and (max-width: 999px) {
+  #servicos .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Todos os botões da faixa amarela em preto */
+#contato-tweaks-card button {
+  border: 1px solid var(--pl-ink);
+  background:
+    linear-gradient(-45deg, transparent 9.2px, var(--pl-ink) 9.2px 10.6px, transparent 10.6px),
+    transparent;
+  color: var(--pl-ink);
+  box-shadow: none;
+}
+#contato-tweaks-card button:hover {
+  background: var(--pl-ink);
+  color: var(--pl-yellow);
+}
+
+/* ==========================================================
+   CONTATO — layout do boletim do cyberpunk.net: uma coluna
+   centralizada; formulário em cima, redes e ajustes numa
+   linha discreta embaixo
+   ========================================================== */
+.contact-band {
+  padding: 64px 0 80px;
+}
+.contact-intro__icon {
+  width: 82px;
+  height: 72px;
+  -webkit-mask-image: url("/build/images/icon-warning.svg");
+  mask-image: url("/build/images/icon-warning.svg");
+}
+#contato .contact-intro h2.cyberpunk {
+  margin: 22px 0 10px;
+  font-size: clamp(26px, 2.6vw, 34px);
+}
+#contato .contact-intro h2.cyberpunk:after {
+  content: none;
+}
+.contact-intro__text {
+  max-width: 56ch;
+  font-size: 18px;
+}
+
+#contato .cards#contato-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 48px;
+  width: min(820px, 100%);
+  margin: 40px auto 0;
+  justify-items: stretch;
+}
+#contato .card.card-cyberpunk {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+}
+#contato .card.card-cyberpunk:hover {
+  transform: none;
+}
+
+/* Formulário: nome e e-mail lado a lado, mensagem inteira, botão à direita */
+#contato-form {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px 28px;
+  align-items: end;
+}
+#contato-form h3.cyberpunk {
+  display: none;
+}
+#contato-form label {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+}
+#contato-form label[for="mensagem"] {
+  grid-column: 1 / -1;
+}
+#contato-form .form-control {
+  margin-top: 4px;
+  border-bottom-width: 2px;
+}
+#contato-form .form-control input,
+#contato-form .form-control textarea {
+  padding: 8px 2px;
+  font-size: 18px;
+}
+#contato-form .form-control textarea {
+  min-height: 96px;
+}
+#contato-form #form-submit {
+  grid-column: 2;
+  justify-self: end;
+  min-width: 212px;
+  margin-top: 4px;
+}
+
+/* Linha de baixo: redes | ajustes visuais */
+#contato-links-card,
+#contato-tweaks-card {
+  margin-top: 48px !important;
+  padding-top: 26px !important;
+  border-top: 1px solid rgba(10, 10, 15, 0.35) !important;
+}
+#contato-links-card h3.cyberpunk,
+#contato-tweaks-card h3.cyberpunk {
+  margin: 0 0 14px;
+  padding: 0;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+#contato-links-card h3.cyberpunk:before,
+#contato-tweaks-card h3.cyberpunk:before,
+#contato-links-card h3.cyberpunk:after,
+#contato-tweaks-card h3.cyberpunk:after {
+  content: none;
+}
+#links-container {
+  gap: 10px !important;
+  margin: 0 !important;
+}
+#links-container a,
+#contato-tweaks-card button {
+  min-height: 40px;
+  padding: 0 18px;
+  font-size: 14px;
+}
+#contato-tweaks-card > div {
+  gap: 10px !important;
+  margin-bottom: 14px !important;
+}
+#contato-tweaks-card label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+#contato-tweaks-card input[type="range"] {
+  flex: 1;
+  accent-color: var(--pl-ink);
+}
+#contato-tweaks-card #anaglyph-description {
+  margin: 8px 0 0;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+@media (max-width: 768px) {
+  #contato .cards#contato-cards {
+    grid-template-columns: 1fr;
+  }
+  #contato-form {
+    grid-template-columns: 1fr;
+  }
+  #contato-form #form-submit {
+    grid-column: 1;
+    justify-self: stretch;
+  }
+  #contato-tweaks-card {
+    margin-top: 28px !important;
+  }
+}
+
+/* ==========================================================
+   RAIL DE PROGRESSO (HUD) — substitui a barra degradê
+   ========================================================== */
+.progress {
+  left: 22px;
+  width: 150px;
+  height: 56vh;
+  background: none;
+  border-radius: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.progress__track {
+  position: absolute;
+  left: 5px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(10,252,139,0.35) 0 6px,
+    transparent 6px 10px
+  );
+}
+.progress .bar {
+  left: -1px;
+  top: 0;
+  bottom: auto;
+  width: 3px;
+  background: var(--pl-yellow);
+  box-shadow: 0 0 10px rgba(10,252,139,0.55);
+  transition: height 0.1s linear;
+}
+.progress__mark {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 20px;
+  transform: translateY(-50%);
+  color: rgba(10,252,139,0.55);
+  text-decoration: none;
+  pointer-events: auto;
+}
+/* losango do marcador */
+.progress__mark::before {
+  content: "";
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgba(10,252,139,0.6);
+  background: #0b0b10;
+  transform: rotate(45deg);
+  transition: background-color 0.2s ease-out, border-color 0.2s ease-out,
+    transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.progress__num {
+  font-family: "VT323", monospace;
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+.progress__label {
+  padding: 1px 8px 0;
+  background: var(--pl-yellow);
+  color: var(--pl-ink);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  clip-path: polygon(0 0, 100% 0, 100% 60%, calc(100% - 6px) 100%, 0 100%);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.2s ease-out, transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.progress__mark.is-passed::before {
+  background: rgba(10,252,139,0.55);
+}
+.progress__mark.is-active {
+  color: var(--pl-yellow);
+}
+.progress__mark.is-active::before {
+  background: var(--pl-yellow);
+  border-color: var(--pl-yellow);
+  box-shadow: 0 0 10px rgba(10,252,139,0.7);
+  transform: rotate(45deg) scale(1.25);
+}
+.progress__mark.is-active .progress__label,
+.progress__mark:hover .progress__label,
+.progress__mark:focus-visible .progress__label {
+  opacity: 1;
+  transform: none;
+}
+.progress__mark:focus-visible {
+  outline: none;
+}
+.progress__mark:focus-visible::before {
+  outline: 2px solid var(--pl-cyan);
+  outline-offset: 3px;
+}
+.progress__readout {
+  position: absolute;
+  left: -2px;
+  top: calc(100% + 16px);
+  color: rgba(10,252,139,0.7);
+  font-family: "VT323", monospace;
+  font-size: 14px;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+.progress__readout b {
+  color: var(--pl-yellow);
+  font-weight: 400;
+}
+@media (max-width: 1100px) {
+  .progress__label {
+    display: none;
+  }
+}
+@media (max-width: 768px) {
+  .progress {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress .bar,
+  .progress__mark::before,
+  .progress__label {
+    transition: none;
+  }
+}
+
+/* ==========================================================
+   CONTATO sem formulário: redes em destaque, ajustes discretos
+   ========================================================== */
+#contato .cards#contato-cards {
+  grid-template-columns: 1fr;
+  width: min(640px, 100%);
+  justify-items: center;
+  text-align: center;
+}
+#contato-links-card,
+#contato-tweaks-card {
+  align-items: center;
+}
+#contato-links-card {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-top: 0 !important;
+}
+#contato-links-card h3.cyberpunk {
+  display: none;
+}
+#links-container {
+  justify-content: center;
+  gap: 16px !important;
+}
+#links-container a {
+  min-height: 54px;
+  min-width: 180px;
+  padding: 0 26px;
+  font-size: 16px;
+}
+#contato-tweaks-card {
+  width: 100%;
+  margin-top: 44px !important;
+}
+#contato-tweaks-card > div {
+  justify-content: center;
+}
+#contato-tweaks-card label {
+  justify-content: center;
+}
+#contato-tweaks-card input[type="range"] {
+  flex: 0 1 180px;
+}
+@media (max-width: 768px) {
+  #links-container a {
+    flex: 1 1 100%;
+  }
+}
+
+/* o rail fica acima da faixa amarela do contato */
+.progress {
+  z-index: 25;
+}
+#contato-tweaks-card label {
+  white-space: nowrap;
+}
+
+/* amarelo sobre a faixa amarela sumia: com difference o rail fica escuro ali
+   e continua amarelo sobre o fundo escuro */
+.progress {
+  mix-blend-mode: difference;
+}
