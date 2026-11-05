@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+   Fontes e regras de transição do index.html original (sem alterações).
+   O visual do site em si vem de /styles.css (original), carregado
+   depois do loader, exatamente como no site de origem.
+------------------------------------------------------------------- */
+
+#main-content {
+  opacity: 0;
+  transition: opacity 1.2s ease-in-out;
+}
+body.loading-complete #main-content {
+  opacity: 1;
+}
+
+/* Transição suave do loading */
+#initial-loader {
+  transition: opacity 1.5s ease-out, transform 1.5s ease-out;
+}
+
+#initial-loader.fade-out {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+/* Prevenir recarregamento duplo */
+body.transitioning {
+  overflow: hidden;
+}
+
+body.transitioning #main-content {
+  opacity: 0;
+}
